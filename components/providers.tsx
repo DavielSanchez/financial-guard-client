@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useState, createContext, useContext, type ReactNode } from "react"
 import { AnimatePresence } from "framer-motion"
+import { AuthUnauthorizedHandler } from "@/components/auth-unauthorized-handler"
 
 type PrivacyContextType = {
   privacyMode: boolean
@@ -40,6 +41,7 @@ export function Providers({ children }: { children: ReactNode }) {
           togglePrivacy: () => setPrivacyMode((p) => !p),
         }}
       >
+        <AuthUnauthorizedHandler />
         <AnimatePresence initial={false} mode="wait">
           {children}
         </AnimatePresence>

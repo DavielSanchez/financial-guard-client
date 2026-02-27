@@ -189,39 +189,37 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user, _hasHydrated } = useAuthStore()
   const { syncSetting } = useSettingsSync()
 
-  // 1. Efecto Inicial: Cargar de LocalStorage (Previo a Auth)
+  // 1. Cargar settings: DB (user) > localStorage > defaults
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
+    let fromDb: Partial<Settings> = {}
+    if (user?.settings) {
       try {
-        const parsed = JSON.parse(raw)
-        const merged = { ...defaultSettings, ...parsed }
-        setSettings(merged)
-        applyThemeToDOM(merged.theme, merged.mode)
-      } catch (e) { console.error("Error loading local settings", e) }
-    } else {
-        applyThemeToDOM(defaultSettings.theme, defaultSettings.mode)
+        const s = typeof user.settings === "string" ? JSON.parse(user.settings) : user.settings
+        fromDb = {
+          theme: (s.theme as ThemeName) || defaultSettings.theme,
+          mode: (s.mode as ModeName) || defaultSettings.mode,
+          language: (s.language as LanguageCode) || defaultSettings.language,
+          currency: (s.currency as CurrencyCode) || defaultSettings.currency,
+        }
+      } catch (_) {}
     }
-  }, [])
-
-  // 2. Efecto de Sincronización: Cuando el usuario se loguea
-  useEffect(() => {
-    if (!_hasHydrated || !user) return
-
-    // Mapeo defensivo de la data que viene del backend
-    const syncedSettings: Settings = {
-      mode: (settings.mode),
-      theme: (settings.theme),
-      language: (settings.language),
-      currency: (settings.currency),
-      userName: user.firstName || settings.userName, // firstName viene del profile extendido
+    const fromStorage = (() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        return raw ? JSON.parse(raw) : {}
+      } catch { return {} }
+    })()
+    const merged: Settings = {
+      ...defaultSettings,
+      ...fromStorage,
+      ...fromDb,
+      userName: user?.profile?.firstName ?? fromStorage.userName ?? fromDb.userName ?? defaultSettings.userName,
     }
-
-    setSettings(syncedSettings)
-    applyThemeToDOM(syncedSettings.theme, syncedSettings.mode)
+    setSettings(merged)
+    applyThemeToDOM(merged.theme, merged.mode)
   }, [user, _hasHydrated])
 
-  // 3. Efecto de Persistencia Local y DOM
+  // 2. Persistir a localStorage cuando cambien (para visitas sin login o respaldo local)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
     applyThemeToDOM(settings.theme, settings.mode)
