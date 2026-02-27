@@ -171,6 +171,9 @@ function applyThemeToDOM(theme: ThemeName, mode: ModeName) {
     "--muted-foreground": isDark ? t.darkMuted : t.lightMuted,
     "--neon-1-rgb": hexToRgb(t.neon1),
     "--bg-rgb": hexToRgb(bg),
+    // Sidebar adapts to theme
+    "--sidebar-primary": t.neon1,
+    "--sidebar-ring": t.neon1,
   }
 
   Object.entries(properties).forEach(([key, val]) => root.style.setProperty(key, val))

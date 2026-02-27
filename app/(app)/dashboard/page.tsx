@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faEye,
@@ -13,10 +13,6 @@ import {
   faFire,
   faChevronRight,
   faGear,
-  faGrip,
-  faChartPie,
-  faWallet,
-  faRobot,
 } from "@fortawesome/free-solid-svg-icons"
 import { useState, useMemo } from "react"
 import { usePrivacy } from "@/components/providers"
@@ -29,19 +25,6 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { useAccounts } from "@/hooks/useAccounts"
 import { useRecentTransactions } from "@/hooks/useRecentTransactions"
 import { CategoryIcon } from "@/components/category-icon"
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarGroup,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar"
 
 type TimePeriod = "Day" | "Week" | "Month" | "Year"
 type BalanceTab = "BALANCE" | "INCOME" | "EXPENSE"
@@ -407,17 +390,17 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="flex h-9 w-9 items-center justify-center rounded-xl"
-                          style={{ backgroundColor: `${tx.categories.color}20` }}
+                          style={{ backgroundColor: `${tx.categories?.color}20` }}
                         >
                           <CategoryIcon
-                            name={tx.categories.icon}
-                            color={tx.categories.color}
+                            name={tx.categories?.icon}
+                            color={tx.categories?.color}
                             size={18}
                           />
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">
-                            {tx.note || tx.categories.name}
+                            {tx.note || tx.categories?.name}
                           </p>
                           <p className="text-[10px] text-muted-foreground">
                             {tx.type.toUpperCase()}
@@ -426,10 +409,10 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="py-3 pr-4 text-xs text-muted-foreground">
-                      {tx.accounts.name}
+                      {tx.accounts?.name}
                     </td>
                     <td className="py-3 pr-4 text-xs text-muted-foreground">
-                      {tx.categories.name}
+                      {tx.categories?.name}
                     </td>
                     <td className="py-3 pr-4 text-xs text-muted-foreground">
                       {formattedDate}
@@ -616,104 +599,30 @@ export default function DashboardPage() {
         {renderRecentTable()}
       </div>
 
-      {/* Desktop mega dashboard */}
+      {/* Desktop mega dashboard (sidebar comes from layout) */}
       <div className="hidden h-full lg:block">
-        <SidebarProvider>
-          <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neon-purple/20">
-                  <span className="text-xs font-bold tracking-widest text-neon-purple">
-                    FG
-                  </span>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Cyber Finance
-                  </p>
-                  <p className="text-xs font-semibold text-foreground">
-                    Financial Guard
-                  </p>
-                </div>
-              </div>
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarGroup>
-                <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive>
-                      <Link href="/dashboard">
-                        <FontAwesomeIcon icon={faGrip} />
-                        <span>Dashboard</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link href="/budgeting">
-                        <FontAwesomeIcon icon={faChartPie} />
-                        <span>Budgeting</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link href="/wallet">
-                        <FontAwesomeIcon icon={faWallet} />
-                        <span>Wallet</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link href="/ai-coach">
-                        <FontAwesomeIcon icon={faRobot} />
-                        <span>AI Coach</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            </SidebarContent>
-            <SidebarFooter className="border-t border-sidebar-border/60 p-3 text-[10px] text-muted-foreground">
-              <p className="truncate">
-                {t(getGreetingKey() as any)} · {user?.profile?.firstName}
-              </p>
-            </SidebarFooter>
-          </Sidebar>
-          <SidebarInset className="px-6 py-6">
-            <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
-              <div className="grid grid-cols-12 items-center gap-4">
-                <div className="col-span-8">{renderHeader()}</div>
-                <div className="col-span-4 flex justify-end">
-                  {renderPeriodSelector()}
-                </div>
-              </div>
+        <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
+          <div className="grid grid-cols-12 items-center gap-4">
+            <div className="col-span-8">{renderHeader()}</div>
+            <div className="col-span-4 flex justify-end">{renderPeriodSelector()}</div>
+          </div>
 
-              <div className="grid grid-cols-12 gap-6">
-                {/* Top row: big balance card */}
-                <div className="col-span-12">{renderBalanceCard("lg:p-6")}</div>
-
-                {/* Middle row: chart + accounts */}
-                <div className="col-span-8">
-                  <div className="rounded-2xl border border-glass-border bg-glass-bg p-4">
-                    <DashboardChart
-                      data={currentChart.data}
-                      color={currentChart.color}
-                      gradientId={`${currentChart.id}-large`}
-                      isLoading={isLoadingSummary}
-                    />
-                  </div>
-                </div>
-                <div className="col-span-4">{renderAccountsList()}</div>
-
-                {/* Bottom row: recent table full width */}
-                <div className="col-span-12">{renderRecentTable()}</div>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12">{renderBalanceCard("lg:p-6")}</div>
+            <div className="col-span-8">
+              <div className="rounded-2xl border border-glass-border bg-glass-bg p-4">
+                <DashboardChart
+                  data={currentChart.data}
+                  color={currentChart.color}
+                  gradientId={`${currentChart.id}-large`}
+                  isLoading={isLoadingSummary}
+                />
               </div>
             </div>
-          </SidebarInset>
-        </SidebarProvider>
+            <div className="col-span-4">{renderAccountsList()}</div>
+            <div className="col-span-12">{renderRecentTable()}</div>
+          </div>
+        </div>
       </div>
     </>
   )

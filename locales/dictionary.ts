@@ -108,6 +108,7 @@ export const en = {
 
   // ===================== NAVIGATION =====================
   nav: {
+    groupLabel: "Navigation",
     dashboard: "Dashboard",
     transactions: "Transactions",
     wallet: "Wallet",
@@ -567,6 +568,7 @@ export const es = {
 
   // ===================== NAVIGATION =====================
   nav: {
+    groupLabel: "Navegación",
     dashboard: "Panel de control",
     transactions: "Transacciones",
     wallet: "Billetera",
