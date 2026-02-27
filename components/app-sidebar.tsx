@@ -129,9 +129,6 @@ export function AppSidebar() {
             )
           })}
         </div>
-        <p className="mt-3 truncate text-[10px] text-muted-foreground">
-          {t(getGreetingKey() as any)} · {user?.profile?.firstName ?? "—"}
-        </p>
       </SidebarFooter>
     </Sidebar>
   )
