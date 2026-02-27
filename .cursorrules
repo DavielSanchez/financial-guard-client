@@ -1,0 +1,61 @@
+## Cursor Rules – Financial Guard / Cyber Finance
+
+### 1. Stack y Prioridad Técnica
+- **Next.js**
+  - Usar estrictamente **Next.js 16 (App Router)** para todas las rutas nuevas.
+  - Nuevos módulos deben seguir la convención de `app/` (layouts, segmentos anidados, rutas protegidas).
+- **TypeScript**
+  - Usar **TypeScript 5.7** en todo el código nuevo.
+  - No introducir código JavaScript sin tipos en nuevas features.
+- **Tailwind**
+  - Usar **Tailwind CSS 4** como sistema principal de estilos.
+  - Evitar CSS ad-hoc fuera de `globals.css` salvo que sea estrictamente necesario.
+
+### 2. Arquitectura y Organización de Código
+- **Services como capa de acceso a datos**
+  - Toda llamada HTTP o integración con APIs debe vivir en `services/*.service.ts` (o un nuevo `*.service.ts` equivalente).
+  - No hacer `axios`/`fetch` directamente en componentes de página o UI; delegar siempre a un service.
+- **Hooks como capa de estado de UI y casos de uso**
+  - Efectos de negocio, orquestación de llamadas a servicios y coordinación de estado de UI deben vivir en `hooks/*`.
+  - Hooks deben exponer una API orientada a la pantalla/feature (ej. `useDashboard`, `useTransactions`), no a endpoints CRUD crudos.
+- **Componentes UI sin lógica de negocio**
+  - Archivos bajo `components/ui/*` deben ser puramente presentacionales o genéricos (sin lógica de dominio ni llamadas a servicios).
+  - No introducir lógica de negocio, acceso a `services/*` ni state complejo de dominio dentro de `components/ui/*`.
+  - Si un componente empieza a conocer demasiado del dominio, mover la lógica a un hook y dejar el componente como view.
+
+### 3. Vibe & Design – Cyber-Finance
+- **Estética base**
+  - Mantener el estilo **“Cyber-Finance”**: fondos oscuros, acentos neón, glassmorphism y animaciones sutiles.
+  - Reutilizar patrones existentes: clases `glass`, `bg-glass-bg`, `border-glass-border`, `backdrop-blur-*`, y variables `--neon-*`.
+- **Montos sensibles y privacidad**
+  - Cualquier monto financiero (balances, ingresos, gastos, objetivos de ahorro, vaults, etc.) debe renderizarse dentro de `PrivacyValue`, salvo excepciones muy justificadas.
+  - Si se introduce una nueva vista que muestre dinero o métricas sensibles, envolver siempre los valores numéricos en `PrivacyValue`.
+- **Consistencia visual**
+  - Usar la librería de componentes existente (`components/ui/*`, `GlassCard`, etc.) antes de crear nuevos patrones de UI.
+  - Mantener un enfoque mobile-first y respetar la presencia de `BottomNav` en rutas autenticadas.
+
+### 4. Workflow de Nuevas Features
+- **Orden recomendado de implementación**
+  1. **Dominio y tipos**
+     - Antes de escribir UI, revisar si ya existen tipos en `types/*` para el dominio de la nueva feature.
+     - Si no existen, **crear primero** los tipos necesarios en `types/` (ej. `*.types.ts`) alineados con el PRD.
+  2. **Services / Integración API**
+     - Revisar si hay un `*.service.ts` relevante en `services/`.
+     - Si no existe, **proponer y crear** un nuevo servicio en `services/` que encapsule las llamadas al backend.
+  3. **Hooks**
+     - Implementar un hook en `hooks/*` que orqueste lógica de negocio, estado de UI y uso de servicios.
+  4. **UI / Pages**
+     - Sólo después de tener tipos + servicios + hooks, implementar o extender la UI (páginas en `app/*` y componentes de alto nivel).
+- **Reutilización primero**
+  - Antes de introducir nuevo servicio/hook/tipo, revisar si hay algo equivalente que se pueda extender (`DashboardService`, `useDashboard`, etc.).
+
+### 5. Sincronización con PRD (Fuente de Verdad)
+- El archivo `DOCS/PRD.md` es la **fuente de verdad** de producto.
+- Cada vez que se complete una de las **“Funcionalidades Pendientes”** descritas en el PRD:
+  - Actualizar `DOCS/PRD.md` para reflejar:
+    - Qué se implementó.
+    - Cómo afecta a stack/arquitectura/UX si aplica.
+  - Mantener en el PRD la lista de pendientes coherente con el estado actual del código (añadir, modificar o marcar como resueltas).
+- Al introducir nuevas capacidades significativas (ej. AI Coach real, billing, nuevos módulos financieros):
+  - Extender primero el PRD (visión, alcance, APIs, impactos de negocio) y luego implementar.
+
