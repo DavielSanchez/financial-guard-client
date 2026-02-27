@@ -142,7 +142,7 @@ export default function DashboardPage() {
             backgroundColor: "var(--glass-bg)",
             border: "1px solid var(--glass-border)",
           }}
-          aria-label={privacyMode ? "Show values" : "Hide values"}
+          aria-label={privacyMode ? t("dashboard.hideValues" as any) : t("dashboard.showValues" as any)}
         >
           <FontAwesomeIcon
             icon={privacyMode ? faEyeSlash : faEye}
@@ -233,7 +233,7 @@ export default function DashboardPage() {
           })}
         </div>
         <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
-          DASHBOARD
+          {t("dashboard.label" as any).toUpperCase()}
         </span>
       </div>
 
@@ -302,10 +302,10 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Accounts
+          {t("dashboard.accounts" as any)}
         </h2>
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-          {accounts.length} ACTIVE
+          {accounts.length} {t("dashboard.active" as any).toUpperCase()}
         </span>
       </div>
       <div className="flex flex-col gap-3">
@@ -359,18 +359,18 @@ export default function DashboardPage() {
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="text-xs uppercase tracking-widest text-muted-foreground">
-              <th className="pb-2 pr-4 font-medium">Movement</th>
-              <th className="pb-2 pr-4 font-medium">Account</th>
-              <th className="pb-2 pr-4 font-medium">Category</th>
-              <th className="pb-2 pr-4 font-medium">Date</th>
-              <th className="pb-2 text-right font-medium">Amount</th>
+              <th className="pb-2 pr-4 font-medium">{t("dashboard.table.movement" as any)}</th>
+              <th className="pb-2 pr-4 font-medium">{t("dashboard.table.account" as any)}</th>
+              <th className="pb-2 pr-4 font-medium">{t("dashboard.table.category" as any)}</th>
+              <th className="pb-2 pr-4 font-medium">{t("dashboard.table.date" as any)}</th>
+              <th className="pb-2 text-right font-medium">{t("dashboard.table.amount" as any)}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-glass-border/60">
             {isLoadingRecent && (
               <tr>
                 <td colSpan={5} className="py-6 text-center text-xs text-muted-foreground">
-                  Loading recent activity...
+                  {t("dashboard.loadingRecent" as any)}
                 </td>
               </tr>
             )}
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                             {tx.note || tx.categories?.name}
                           </p>
                           <p className="text-[10px] text-muted-foreground">
-                            {tx.type.toUpperCase()}
+                            {t(`transactions.types.${tx.type}` as any).toUpperCase()}
                           </p>
                         </div>
                       </div>
@@ -531,7 +531,7 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="mt-4">
-          <p className="text-xs text-muted-foreground">Netflix Premium</p>
+          <p className="text-xs text-muted-foreground">{t("dashboard.nextSubscription" as any)}</p>
           <PrivacyValue className="mt-1 font-mono text-xl font-bold text-foreground">
             {formatCurrency(15.99)}
           </PrivacyValue>
@@ -576,7 +576,7 @@ export default function DashboardPage() {
             </span>
           </p>
           <p className="text-[10px] text-muted-foreground">
-            {t("goals.streak.dontBreak" as any, { value: 2, unit: "dias" })}
+            {t("goals.streak.dontBreak" as any, { value: 2, unit: t("time.units.day" as any) })}
           </p>
         </div>
         <FontAwesomeIcon
@@ -602,26 +602,20 @@ export default function DashboardPage() {
       {/* Desktop mega dashboard (sidebar comes from layout) */}
       <div className="hidden h-full lg:block">
         <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
-          <div className="grid grid-cols-12 items-center gap-4">
-            <div className="col-span-8">{renderHeader()}</div>
-            <div className="col-span-4 flex justify-end">{renderPeriodSelector()}</div>
+          <div className="grid grid-cols-12 items-center gap-4 mt-2">
+            <div className="col-span-12">{renderHeader()}</div>
           </div>
 
           <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12">{renderBalanceCard("lg:p-6")}</div>
-            <div className="col-span-8">
-              <div className="rounded-2xl border border-glass-border bg-glass-bg p-4">
-                <DashboardChart
-                  data={currentChart.data}
-                  color={currentChart.color}
-                  gradientId={`${currentChart.id}-large`}
-                  isLoading={isLoadingSummary}
-                />
+                <div className="col-span-4 flex ">
+                  {renderPeriodSelector()}
+                </div>
+                <div className="col-span-12">{renderBalanceCard("lg:p-6")}</div>
+                <div className="col-span-12">{renderInfoRowMobile()}</div>
+                <div className="col-span-12">{renderSavingsWidget()}</div>
+
+                <div className="col-span-12">{renderRecentTable()}</div>
               </div>
-            </div>
-            <div className="col-span-4">{renderAccountsList()}</div>
-            <div className="col-span-12">{renderRecentTable()}</div>
-          </div>
         </div>
       </div>
     </>

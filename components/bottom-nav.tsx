@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useI18n } from "@/hooks/use-translations"
 import { motion } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
@@ -14,19 +15,20 @@ import {
 import { cn } from "@/lib/utils"
 
 const leftItems = [
-  { href: "/dashboard", icon: faGrip, label: "Home" },
-  { href: "/budgeting", icon: faChartPie, label: "Budget" },
+  { href: "/dashboard", icon: faGrip, labelKey: "nav.home" },
+  { href: "/budgeting", icon: faChartPie, labelKey: "nav.budgeting" },
 ] as const
 
 const rightItems = [
-  { href: "/wallet", icon: faWallet, label: "Wallet" },
-  { href: "/ai-coach", icon: faRobot, label: "AI Coach" },
+  { href: "/wallet", icon: faWallet, labelKey: "nav.wallet" },
+  { href: "/ai-coach", icon: faRobot, labelKey: "nav.aiCoach" },
 ] as const
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { t } = useI18n()
 
-  const renderItem = (item: { href: string; icon: typeof faGrip; label: string }) => {
+  const renderItem = (item: { href: string; icon: typeof faGrip; labelKey: string }) => {
     const isActive = pathname === item.href
     return (
       <Link
@@ -56,7 +58,7 @@ export function BottomNav() {
             isActive ? "text-foreground" : "text-muted-foreground"
           )}
         >
-          {item.label}
+          {t(item.labelKey as any)}
         </span>
       </Link>
     )

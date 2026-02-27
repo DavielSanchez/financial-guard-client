@@ -372,7 +372,7 @@ export default function SettingsPage() {
                   className="flex-1 rounded-xl py-2.5 text-xs font-bold text-muted-foreground"
                   style={{ backgroundColor: "var(--muted)" }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}

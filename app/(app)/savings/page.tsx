@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import { useI18n } from "@/hooks/use-translations"
 import { motion, AnimatePresence } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
@@ -150,11 +151,13 @@ function PiggyBank({
   onCheckIn,
   onDeposit,
   onDelete,
+  t,
 }: {
   goal: SavingsGoal
   onCheckIn: (id: number) => void
   onDeposit: (id: number, amount: number) => void
   onDelete: (id: number) => void
+  t: (key: string, params?: Record<string, string | number>) => string
 }) {
   const [depositInput, setDepositInput] = useState("")
   const [showDeposit, setShowDeposit] = useState(false)
@@ -261,8 +264,8 @@ function PiggyBank({
               <h3 className="text-sm font-bold text-foreground">{goal.name}</h3>
               <p className="text-[10px] text-muted-foreground">
                 {goal.type === "open"
-                  ? "Open Goal"
-                  : `Daily Challenge \u00B7 +$${goal.increment}/day`}
+                  ? t("goals.openGoal")
+                  : `${t("goals.dailyChallenge")} \u00B7 +$${goal.increment}/day`}
               </p>
             </div>
           </div>
@@ -277,7 +280,7 @@ function PiggyBank({
                   color: "#00FF94",
                 }}
               >
-                COMPLETE
+                {t("goals.complete").toUpperCase()}
               </motion.span>
             )}
             {/* Delete button */}
@@ -286,7 +289,7 @@ function PiggyBank({
               onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
               className="flex h-8 w-8 items-center justify-center rounded-lg"
               style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-              aria-label="Delete goal"
+              aria-label={t("common.delete")}
             >
               <FontAwesomeIcon
                 icon={faTrashCan}
@@ -312,7 +315,7 @@ function PiggyBank({
                   border: "1px solid rgba(255,0,127,0.2)",
                 }}
               >
-                <p className="text-xs text-foreground">Delete this goal?</p>
+                <p className="text-xs text-foreground">{t("goals.deleteThisGoal")}</p>
                 <div className="flex gap-2">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
@@ -320,7 +323,7 @@ function PiggyBank({
                     className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
                     style={{ backgroundColor: "rgba(255,0,127,0.3)" }}
                   >
-                    Delete
+                    {t("common.delete")}
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
@@ -328,7 +331,7 @@ function PiggyBank({
                     className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-muted-foreground"
                     style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </motion.button>
                 </div>
               </div>
@@ -380,16 +383,16 @@ function PiggyBank({
               {fillPercentage.toFixed(0)}%
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {"Security Lvl: "}
+              {t("goals.securityLvlPrefix" as any)}
               {fillPercentage < 25
-                ? "LOW"
+                  ? t("goals.securityLevel.low" as any)
                 : fillPercentage < 50
-                  ? "MODERATE"
+                  ? t("goals.securityLevel.moderate" as any)
                   : fillPercentage < 75
-                    ? "HIGH"
+                    ? t("goals.securityLevel.high" as any)
                     : fillPercentage < 100
-                      ? "VERY HIGH"
-                      : "MAX"}
+                      ? t("goals.securityLevel.veryHigh" as any)
+                      : t("goals.securityLevel.max" as any)}
             </span>
           </div>
         </div>
@@ -418,14 +421,14 @@ function PiggyBank({
                   className="font-mono text-xs font-bold"
                   style={{ color: "#FF8C00" }}
                 >
-                  {goal.streak} day streak
+                  {t("goals.dayStreak", { count: goal.streak || 0 })}
                 </span>
               </div>
 
               {/* Days remaining */}
               {!isComplete && (
                 <span className="text-[10px] text-muted-foreground">
-                  {daysRemaining} days left
+                  {t("goals.daysLeft", { count: daysRemaining })}
                 </span>
               )}
             </div>
@@ -443,15 +446,14 @@ function PiggyBank({
               >
                 <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
                 <span>
-                  {"Check-in $"}
-                  {todayAmount}
+                  {t("goals.checkIn" as any, { amount: todayAmount })}
                 </span>
               </motion.button>
             ) : (
               !isComplete && (
                 <span className="flex items-center gap-1.5 text-[10px] text-neon-green">
                   <FontAwesomeIcon icon={faCheck} className="text-[8px]" />
-                  Today done
+                  {t("goals.todayDone")}
                 </span>
               )
             )}
@@ -526,7 +528,7 @@ function PiggyBank({
                   }}
                 >
                   <FontAwesomeIcon icon={faArrowUp} className="text-[10px]" />
-                  Deposit
+                  {t("goals.deposit")}
                 </motion.button>
               )}
             </AnimatePresence>
@@ -540,6 +542,7 @@ function PiggyBank({
 // --- Main Page ---
 
 export default function SavingsGoalsPage() {
+  const { t } = useI18n()
   const [goals, setGoals] = useState<SavingsGoal[]>(initialGoals)
   const [showCreate, setShowCreate] = useState(false)
 
@@ -646,17 +649,17 @@ export default function SavingsGoalsPage() {
         <div>
           <h1 className="flex items-baseline gap-2">
             <span className="font-serif text-xl font-bold tracking-wider text-foreground">
-              SAVINGS
+              {t("goals.savings" as any).toUpperCase()}
             </span>
             <span
               className="font-serif text-xl font-bold tracking-wider text-neon-green"
               style={{ textShadow: "0 0 10px rgba(0,255,148,0.4)" }}
             >
-              VAULT
+              {t("goals.vault" as any).toUpperCase()}
             </span>
           </h1>
           <p className="mt-0.5 font-mono text-[10px] tracking-[0.3em] text-neon-cyan">
-            NEON PIGGY BANK
+            {t("goals.neonPiggyBank" as any).toUpperCase()}
           </p>
         </div>
         <motion.button
@@ -686,7 +689,7 @@ export default function SavingsGoalsPage() {
       >
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Total Saved
+            {t("goals.totalSaved" as any)}
           </p>
           <PrivacyValue
             className="font-mono text-2xl font-bold text-foreground"
@@ -725,23 +728,23 @@ export default function SavingsGoalsPage() {
               }}
             >
               <h3 className="font-serif text-sm font-bold tracking-wider text-foreground">
-                NEW GOAL
+                {t("goals.newGoal" as any).toUpperCase()}
               </h3>
 
               {/* Type selector */}
               <div className="flex gap-2">
                 {(
                   [
-                    { key: "open" as GoalType, label: "Open Goal" },
-                    { key: "progression" as GoalType, label: "Daily Challenge" },
+                    { key: "open" as GoalType, labelKey: "goals.openGoal" },
+                    { key: "progression" as GoalType, labelKey: "goals.dailyChallenge" },
                   ] as const
-                ).map((t) => (
+                ).map((tab) => (
                   <button
-                    key={t.key}
-                    onClick={() => setNewType(t.key)}
+                    key={tab.key}
+                    onClick={() => setNewType(tab.key)}
                     className="relative flex-1 rounded-xl py-2.5 text-center text-xs font-bold"
                   >
-                    {newType === t.key && (
+                    {newType === tab.key && (
                       <motion.div
                         layoutId="new-goal-type"
                         className="absolute inset-0 rounded-xl"
@@ -757,9 +760,9 @@ export default function SavingsGoalsPage() {
                       />
                     )}
                     <span
-                      className={`relative z-10 ${newType === t.key ? "text-foreground" : "text-muted-foreground"}`}
+                      className={`relative z-10 ${newType === tab.key ? "text-foreground" : "text-muted-foreground"}`}
                     >
-                      {t.label}
+                      {t(tab.labelKey as any)}
                     </span>
                   </button>
                 ))}
@@ -768,13 +771,13 @@ export default function SavingsGoalsPage() {
               {/* Goal Name */}
               <div>
                 <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Goal Name
+                  {t("goals.goalName" as any)}
                 </label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. Vacation, Emergency..."
+                  placeholder={t("goals.placeholder.name" as any)}
                   className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none placeholder-muted-foreground/50"
                   style={{
                     backgroundColor: "rgba(255,255,255,0.06)",
@@ -787,7 +790,7 @@ export default function SavingsGoalsPage() {
               {newType === "open" && (
                 <div>
                   <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Target Amount
+                    {t("goals.targetAmount" as any)}
                   </label>
                   <div
                     className="flex items-center gap-2 rounded-xl px-4 py-3"
@@ -818,7 +821,7 @@ export default function SavingsGoalsPage() {
                     {/* Start Amount */}
                     <div>
                       <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Day 1 Amount
+                        {t("goals.day1Amount" as any)}
                       </label>
                       <div
                         className="flex items-center gap-1 rounded-xl px-3 py-3"
@@ -846,7 +849,7 @@ export default function SavingsGoalsPage() {
                     {/* Increment */}
                     <div>
                       <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Daily +Increment
+                        {t("goals.dailyIncrement" as any)}
                       </label>
                       <div
                         className="flex items-center gap-1 rounded-xl px-3 py-3"
@@ -877,7 +880,7 @@ export default function SavingsGoalsPage() {
                   {/* Challenge Duration */}
                   <div>
                     <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Challenge Duration (days)
+                      {t("goals.challengeDuration" as any)}
                     </label>
                     <div
                       className="flex items-center gap-2 rounded-xl px-4 py-3"
@@ -899,7 +902,7 @@ export default function SavingsGoalsPage() {
                         className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder-muted-foreground/50"
                       />
                       <span className="whitespace-nowrap text-[10px] text-muted-foreground">
-                        days
+                        {t("goals.days" as any)}
                       </span>
                     </div>
                   </div>
@@ -911,7 +914,7 @@ export default function SavingsGoalsPage() {
                   >
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                       <FontAwesomeIcon icon={faChevronDown} className="text-[8px]" />
-                      <span>Preview</span>
+                      <span>{t("goals.preview" as any)}</span>
                     </div>
                     <div className="mt-1.5 flex gap-2">
                       {dayPreview.map((amt, i) => (
@@ -935,10 +938,7 @@ export default function SavingsGoalsPage() {
                       </div>
                     </div>
                     <p className="mt-2 font-mono text-xs font-bold text-neon-cyan">
-                      {"Total in "}
-                      {newChallengeDays || "30"}
-                      {" days: $"}
-                      {projectedTotal.toLocaleString()}
+                      {t("goals.totalInDays" as any, { days: newChallengeDays || "30" })}: ${projectedTotal.toLocaleString()}
                     </p>
                   </div>
                 </>
@@ -954,7 +954,7 @@ export default function SavingsGoalsPage() {
                   boxShadow: "0 0 15px rgba(143,0,255,0.3)",
                 }}
               >
-                Create Goal
+                {t("goals.createGoal" as any)}
               </motion.button>
             </div>
           </motion.div>
@@ -971,6 +971,7 @@ export default function SavingsGoalsPage() {
               onCheckIn={handleCheckIn}
               onDeposit={handleDeposit}
               onDelete={handleDelete}
+              t={t}
             />
           ))}
         </AnimatePresence>
@@ -986,9 +987,9 @@ export default function SavingsGoalsPage() {
                 style={{ filter: "drop-shadow(0 0 8px #8F00FF)" }}
               />
             </div>
-            <p className="text-sm text-muted-foreground">No goals yet</p>
+            <p className="text-sm text-muted-foreground">{t("goals.noGoalsYet" as any)}</p>
             <p className="text-xs text-muted-foreground">
-              Tap + to create your first savings goal
+              {t("goals.tapToCreate" as any)}
             </p>
           </div>
         )}

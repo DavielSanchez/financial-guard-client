@@ -22,22 +22,11 @@ type Message = {
 }
 
 const actionChips = [
-  { label: "Can I afford a PS5?", icon: faGamepad, color: "#FF007F" },
-  { label: "Analyze subscriptions", icon: faCreditCard, color: "#00D4FF" },
-  { label: "Savings forecast", icon: faChartLine, color: "#00FF94" },
-  { label: "Spending tips", icon: faLightbulb, color: "#8F00FF" },
+  { key: "affordPS5" as const, icon: faGamepad, color: "#FF007F" },
+  { key: "analyzeSubscriptions" as const, icon: faCreditCard, color: "#00D4FF" },
+  { key: "savingsForecast" as const, icon: faChartLine, color: "#00FF94" },
+  { key: "spendingTips" as const, icon: faLightbulb, color: "#8F00FF" },
 ]
-
-const aiResponses: Record<string, string> = {
-  "Can I afford a PS5?":
-    "Based on your current savings rate of $2,100/mo and discretionary budget, you could afford a PS5 ($499) without impacting your financial goals. Your entertainment budget has $115 remaining this month. Recommendation: Wait 2 weeks for your next paycheck to maintain your buffer.",
-  "Analyze subscriptions":
-    "You have 5 active subscriptions totaling $93.97/month ($1,127.64/year). Your most expensive is Gym at $45/mo which you used 8 times last month (cost per visit: $5.63). Netflix at $15.99/mo had 12 viewing sessions. Consider: Gym Membership has the lowest usage-to-cost ratio.",
-  "Savings forecast":
-    "At your current savings rate of $2,100/month, projections show: 3 months: $6,300 | 6 months: $12,600 | 1 year: $25,200. You are on track to reach your emergency fund goal of $15,000 by May. After that, consider diversifying into index funds for compound growth.",
-  "Spending tips":
-    "Top 3 optimization opportunities: 1) Food & Dining is at 85% of budget - try meal prepping Sundays to save ~$120/mo. 2) Your transport costs dropped 15% since switching to hybrid work. 3) Bundle your streaming services - switching to a family plan could save $8/mo.",
-}
 
 export default function AiCoachPage() {
   const { t } = useI18n()
@@ -56,7 +45,13 @@ export default function AiCoachPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const sendMessage = (text: string) => {
+  const getResponseForKey = (key: string) => {
+    const responseKey = `aiCoach.responses.${key}` as const
+    const response = t(responseKey as any)
+    return response !== responseKey ? response : null
+  }
+
+  const sendMessage = (text: string, responseKey?: string) => {
     if (!text.trim()) return
     const userMsg: Message = {
       id: Date.now(),
@@ -70,7 +65,7 @@ export default function AiCoachPage() {
     // Simulate AI response
     setTimeout(() => {
       const aiText =
-        aiResponses[text] ||
+        (responseKey && getResponseForKey(responseKey)) ||
         `I have analyzed your financial data regarding "${text}". Based on your current spending patterns and income trajectory, I would recommend reviewing your budget allocations and considering automated savings rules. Would you like me to create a detailed action plan?`
       const aiMsg: Message = {
         id: Date.now() + 1,
@@ -208,13 +203,13 @@ export default function AiCoachPage() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage(input, undefined)}
           placeholder={t('aiCoach.placeholder' as any)}
           className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder-muted-foreground/50"
         />
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => sendMessage(input)}
+          onClick={() => sendMessage(input, undefined)}
           disabled={!input.trim()}
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-neon-purple text-white disabled:opacity-30"
         >

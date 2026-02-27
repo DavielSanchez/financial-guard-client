@@ -117,7 +117,7 @@ const variants = {
               icon={faArrowRightArrowLeft}
               className={bridgeMode ? "glow-cyan" : ""}
             />
-            <span>{bridgeMode ? "Accounts" : "Bridge"}</span>
+            <span>{bridgeMode ? t("wallet.actions.accounts" as any) : t("wallet.actions.bridge" as any)}</span>
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -148,8 +148,8 @@ const variants = {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-neon-purple/10 text-neon-purple shadow-[0_0_20px_rgba(143,0,255,0.2)]">
                     <FontAwesomeIcon icon={faPlus} className="text-xl" />
                   </div>
-                  <p className="text-sm font-bold text-foreground">No accounts detected</p>
-                  <p className="text-[10px] text-muted-foreground">Tap to initialize your first vault</p>
+                  <p className="text-sm font-bold text-foreground">{t("wallet.vault.noAccounts" as any)}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("wallet.vault.initializeFirst" as any)}</p>
                 </motion.div>
               ) : (
                 <>
@@ -197,8 +197,8 @@ const variants = {
                             >
                               <FontAwesomeIcon icon={faPlus} className="text-2xl text-primary shadow-neon" />
                             </motion.div>
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">New Account</p>
-                            <p className="mt-1 text-[9px] text-foreground/40 uppercase">Initialize Protocol</p>
+                            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("wallet.actions.addAccount" as any)}</p>
+                            <p className="mt-1 text-[9px] text-foreground/40 uppercase">{t("wallet.vault.initializeProtocol" as any)}</p>
                           </div>
                         ) : (
                           /* Tarjetas de cuenta normales */
@@ -216,7 +216,7 @@ const variants = {
                               <p className="font-mono text-lg tracking-[0.25em] text-white/80">{cards[currentCard].number}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Liquid Assets</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{t("wallet.liquidAssets" as any)}</p>
                               <PrivacyValue className="font-mono text-3xl font-black italic text-white tracking-tighter leading-none">
                                 ${cards[currentCard].balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                               </PrivacyValue>
@@ -256,7 +256,7 @@ const variants = {
             >
               <div className="flex items-center gap-3">
                 <GlassCard className="flex-1 p-3" glowColor="purple">
-                  <p className="text-[10px] uppercase text-muted-foreground">From</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">{t("wallet.bridge.from" as any)}</p>
                   <select
                     value={bridgeFrom}
                     onChange={(e) => setBridgeFrom(Number(e.target.value))}
@@ -282,7 +282,7 @@ const variants = {
                 </GlassCard>
               </div>
               <GlassCard className="flex flex-col items-center py-4" glowColor="cyan">
-                <p className="text-[10px] uppercase text-muted-foreground tracking-[0.2em]">Amount</p>
+                <p className="text-[10px] uppercase text-muted-foreground tracking-[0.2em]">{t("wallet.bridge.amount" as any)}</p>
                 <input type="text" placeholder="0.00" className="w-full bg-transparent text-center font-mono text-3xl font-black text-foreground outline-none" />
               </GlassCard>
               <motion.button whileTap={{ scale: 0.98 }} className="w-full rounded-xl bg-neon-cyan py-4 text-xs font-black uppercase text-background">
@@ -297,7 +297,7 @@ const variants = {
       <div className="mt-2">
         <div className="mb-3 flex items-center gap-2">
           <FontAwesomeIcon icon={faLock} className="text-neon-pink text-[10px]" />
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Vault Accounts</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("wallet.vault.title" as any)}</p>
         </div>
         <div className="flex flex-col gap-2">
           {vaultAccounts.map((acc) => {
@@ -332,8 +332,8 @@ const variants = {
             <FontAwesomeIcon icon={faShieldHalved} className="text-neon-purple shadow-neon" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold">Savings Vault</p>
-            <p className="text-[10px] text-muted-foreground">4 active targets</p>
+            <p className="text-sm font-bold">{t("wallet.link.savingsVault" as any)}</p>
+            <p className="text-[10px] text-muted-foreground">{t("wallet.link.activeTargets" as any, { count: 4 })}</p>
           </div>
           <FontAwesomeIcon icon={faChevronRight} className="text-xs text-muted-foreground" />
         </motion.div>

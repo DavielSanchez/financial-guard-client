@@ -109,6 +109,7 @@ export const en = {
   // ===================== NAVIGATION =====================
   nav: {
     groupLabel: "Navigation",
+    home: "Home",
     dashboard: "Dashboard",
     transactions: "Transactions",
     wallet: "Wallet",
@@ -236,6 +237,7 @@ export const en = {
 
   // ===================== DASHBOARD =====================
   dashboard: {
+    label: "Dashboard",
     summary: "System Summary",
     leftToday: "Left today",
     spentToday: "Spent today",
@@ -243,6 +245,19 @@ export const en = {
     healthScore: "Financial Health",
     recentActivity: "Recent activity",
     noActivity: "No activity to show",
+    accounts: "Accounts",
+    active: "Active",
+    loadingRecent: "Loading recent activity...",
+    showValues: "Show values",
+    hideValues: "Hide values",
+    table: {
+      movement: "Movement",
+      account: "Account",
+      category: "Category",
+      date: "Date",
+      amount: "Amount",
+    },
+    nextSubscription: "Netflix Premium",
     status: {
       onTrack: "ON TRACK",
       warning: "OVER BUDGET",
@@ -295,11 +310,68 @@ export const en = {
     }
   },
 
+  // ===================== BUDGETING =====================
+  budgeting: {
+    budget: "Budget",
+    control: "Control",
+    protocolActive: "Protocol: Active",
+    liquidEnvelopes: "Liquid Envelopes",
+    drainers: "Drainers",
+    totalSpent: "Total Spent",
+    limit: "Limit",
+    monthlyDrain: "Monthly Drain",
+    active: "Active",
+    next: "Next",
+    categories: {
+      housing: "Housing",
+      cybernetics: "Cybernetics",
+      entertainment: "Entertainment",
+      transport: "Transport",
+      foodDining: "Food & Dining",
+      health: "Health",
+    },
+  },
+
   // ===================== GOALS & SAVINGS =====================
   goals: {
     title: "Savings Goals",
     piggyBank: "Piggy Bank",
-    createGoal: "Initialize New Goal",
+    savings: "Savings",
+    vault: "Vault",
+    neonPiggyBank: "Neon Piggy Bank",
+    totalSaved: "Total Saved",
+    newGoal: "New Goal",
+    openGoal: "Open Goal",
+    dailyChallenge: "Daily Challenge",
+    goalName: "Goal Name",
+    targetAmount: "Target Amount",
+    day1Amount: "Day 1 Amount",
+    dailyIncrement: "Daily +Increment",
+    challengeDuration: "Challenge Duration (days)",
+    days: "days",
+    preview: "Preview",
+    totalInDays: "Total in {days} days",
+    createGoal: "Create Goal",
+    noGoalsYet: "No goals yet",
+    tapToCreate: "Tap + to create your first savings goal",
+    complete: "Complete",
+    deposit: "Deposit",
+    todayDone: "Today done",
+    deleteThisGoal: "Delete this goal?",
+    securityLvlPrefix: "Security Lvl: ",
+    securityLevel: {
+      low: "LOW",
+      moderate: "MODERATE",
+      high: "HIGH",
+      veryHigh: "VERY HIGH",
+      max: "MAX",
+    },
+    dayStreak: "{count} day streak",
+    daysLeft: "{count} days left",
+    checkIn: "Check-in ${amount}",
+    placeholder: {
+      name: "e.g. Vacation, Emergency...",
+    },
     editGoal: "Modify Target",
     deleteGoal: "Terminate Goal",
     
@@ -362,15 +434,18 @@ export const en = {
       taxReserve: "Tax Reserve",
       noAccounts: "No accounts detected",
       initializeFirst: "Tap to initialize your first vault",
+      initializeProtocol: "Initialize Protocol",
     },
 
     bridge: {
       title: "Bridge Mode",
       amount: "Amount",
       execute: "Execute Bridge",
-      from: "From Account",
-      to: "To Account",
+      from: "From",
+      to: "To",
     },
+
+    liquidAssets: "Liquid Assets",
 
     details: {
       balance: "Balance",
@@ -429,6 +504,23 @@ export const en = {
       gas: "Gas",
       gym: "Gym",
     },
+
+    logged: "Logged",
+    logIncomeExpense: "Log Income / Expense",
+    logIncome: "Log Income",
+    logExpense: "Log Expense",
+  },
+
+  // ===================== ADD CATEGORY =====================
+  addCategory: {
+    title: "New {type} Category",
+    titleIncome: "New Income Category",
+    titleExpense: "New Expense Category",
+    name: "Name",
+    customColor: "Custom Color",
+    selectIcon: "Select an Icon",
+    saveButton: "SAVE CATEGORY",
+    placeholder: "e.g. Gym, Freelance...",
   },
 
   // ===================== AI COACH =====================
@@ -569,6 +661,7 @@ export const es = {
   // ===================== NAVIGATION =====================
   nav: {
     groupLabel: "Navegación",
+    home: "Inicio",
     dashboard: "Panel de control",
     transactions: "Transacciones",
     wallet: "Billetera",
@@ -696,6 +789,7 @@ export const es = {
 
   // ===================== DASHBOARD =====================
   dashboard: {
+    label: "Panel de control",
     summary: "Resumen del Sistema",
     leftToday: "Restante hoy",
     spentToday: "Gastado hoy",
@@ -703,6 +797,19 @@ export const es = {
     healthScore: "Salud Financiera",
     recentActivity: "Actividad reciente",
     noActivity: "Sin actividad para mostrar",
+    accounts: "Cuentas",
+    active: "Activo",
+    loadingRecent: "Cargando actividad reciente...",
+    showValues: "Mostrar valores",
+    hideValues: "Ocultar valores",
+    table: {
+      movement: "Movimiento",
+      account: "Cuenta",
+      category: "Categoría",
+      date: "Fecha",
+      amount: "Monto",
+    },
+    nextSubscription: "Netflix Premium",
     status: {
       onTrack: "EN ORDEN",
       warning: "SOBRE PRESUPUESTO",
@@ -712,6 +819,28 @@ export const es = {
       activity: "Monitor de Actividad",
       distribution: "Distribución de Gastos",
     }
+  },
+
+  // ===================== BUDGETING =====================
+  budgeting: {
+    budget: "Presupuesto",
+    control: "Control",
+    protocolActive: "Protocolo: Activo",
+    liquidEnvelopes: "Sobres Líquidos",
+    drainers: "Drenadores",
+    totalSpent: "Total Gastado",
+    limit: "Límite",
+    monthlyDrain: "Drenaje Mensual",
+    active: "Activo",
+    next: "Siguiente",
+    categories: {
+      housing: "Vivienda",
+      cybernetics: "Cibernética",
+      entertainment: "Entretenimiento",
+      transport: "Transporte",
+      foodDining: "Comida y Restaurantes",
+      health: "Salud",
+    },
   },
 
   // ===================== FINANCE & BANKING =====================
@@ -759,7 +888,42 @@ export const es = {
   goals: {
     title: "Metas de Ahorro",
     piggyBank: "Alcancía",
-    createGoal: "Inicializar Nueva Meta",
+    savings: "Ahorros",
+    vault: "Bóveda",
+    neonPiggyBank: "Alcancía Neón",
+    totalSaved: "Total Ahorrado",
+    newGoal: "Nueva Meta",
+    openGoal: "Meta Abierta",
+    dailyChallenge: "Desafío Diario",
+    goalName: "Nombre de la Meta",
+    targetAmount: "Monto Objetivo",
+    day1Amount: "Monto Día 1",
+    dailyIncrement: "Incremento Diario +",
+    challengeDuration: "Duración del Desafío (días)",
+    days: "días",
+    preview: "Vista Previa",
+    totalInDays: "Total en {days} días",
+    createGoal: "Crear Meta",
+    noGoalsYet: "Aún no hay metas",
+    tapToCreate: "Toca + para crear tu primera meta de ahorro",
+    complete: "Completar",
+    deposit: "Depositar",
+    todayDone: "Hoy hecho",
+    deleteThisGoal: "¿Eliminar esta meta?",
+    securityLvlPrefix: "Nivel Seg: ",
+    securityLevel: {
+      low: "BAJO",
+      moderate: "MODERADO",
+      high: "ALTO",
+      veryHigh: "MUY ALTO",
+      max: "MÁX",
+    },
+    dayStreak: "racha de {count} días",
+    daysLeft: "{count} días restantes",
+    checkIn: "Registro ${amount}",
+    placeholder: {
+      name: "ej: Vacaciones, Emergencias...",
+    },
     editGoal: "Modificar Objetivo",
     deleteGoal: "Terminar Meta",
     
@@ -822,6 +986,7 @@ export const es = {
       taxReserve: "Reserva Fiscal",
       noAccounts: "Sin cuentas detectadas",
       initializeFirst: "Toca para inicializar tu primera bóveda",
+      initializeProtocol: "Inicializar Protocolo",
     },
 
     bridge: {
@@ -831,6 +996,8 @@ export const es = {
       from: "Desde Cuenta",
       to: "Hacia Cuenta",
     },
+
+    liquidAssets: "Activos Líquidos",
 
     details: {
       balance: "Saldo",
@@ -889,6 +1056,23 @@ export const es = {
       gas: "Gasolina",
       gym: "Gimnasio",
     },
+
+    logged: "Registrado",
+    logIncomeExpense: "Registrar Ingreso / Gasto",
+    logIncome: "Registrar Ingreso",
+    logExpense: "Registrar Gasto",
+  },
+
+  // ===================== ADD CATEGORY =====================
+  addCategory: {
+    title: "Nueva Categoría de {type}",
+    titleIncome: "Nueva Categoría de Ingreso",
+    titleExpense: "Nueva Categoría de Gasto",
+    name: "Nombre",
+    customColor: "Color Personalizado",
+    selectIcon: "Selecciona un Icono",
+    saveButton: "GUARDAR CATEGORÍA",
+    placeholder: "Ejem: Gimnasio, Freelance...",
   },
 
   // ===================== AI COACH =====================

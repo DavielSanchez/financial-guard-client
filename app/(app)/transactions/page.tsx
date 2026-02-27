@@ -18,10 +18,10 @@ import { LucideProps } from "lucide-react"
 import { AddCategoryDrawer } from "@/components/ui/add-category-drawer"
 
 const quickRecurring = [
-  { label: "Coffee", amount: "5.50", category: "food" },
-  { label: "Lunch", amount: "12.00", category: "food" },
-  { label: "Gas", amount: "45.00", category: "transport" },
-  { label: "Gym", amount: "45.00", category: "health" },
+  { labelKey: "transactions.quickItems.coffee", amount: "5.50", category: "food" },
+  { labelKey: "transactions.quickItems.lunch", amount: "12.00", category: "food" },
+  { labelKey: "transactions.quickItems.gas", amount: "45.00", category: "transport" },
+  { labelKey: "transactions.quickItems.gym", amount: "45.00", category: "health" },
 ]
 
 export default function TransactionEntryPage() {
@@ -115,7 +115,7 @@ export default function TransactionEntryPage() {
                     icon={type === "income" ? faArrowDown : faArrowUp}
                     className="text-[10px]"
                   />
-                  {t(`finance.transactionTypes.${type}` as any)}
+                  {t(`transactions.types.${type}` as any)}
                 </span>
               </motion.button>
             )
@@ -270,7 +270,7 @@ export default function TransactionEntryPage() {
         <div className="flex flex-wrap gap-2">
           {quickRecurring.map((item) => (
             <motion.button
-              key={item.label}
+              key={item.labelKey}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setAmount(item.amount)
@@ -278,7 +278,7 @@ export default function TransactionEntryPage() {
               }}
               className="glass flex items-center gap-2 rounded-full px-4 py-2 text-xs text-foreground transition-colors hover:bg-white/10"
             >
-              <span>{item.label}</span>
+              <span>{t(item.labelKey as any)}</span>
               <span className="font-mono font-bold text-neon-cyan">
                 ${item.amount}
               </span>
@@ -320,7 +320,7 @@ export default function TransactionEntryPage() {
                     className="text-neon-cyan"
                   />
                 </motion.div>
-                <span className="text-neon-cyan">Scanning...</span>
+                <span className="text-neon-cyan">{t("transactions.actions.scanning" as any)}</span>
               </motion.div>
             ) : (
               <motion.div
@@ -334,7 +334,7 @@ export default function TransactionEntryPage() {
                   icon={faCamera}
                   className="glow-cyan text-neon-cyan"
                 />
-                <span>Scan Receipt</span>
+                <span>{t("transactions.actions.scanReceipt" as any)}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -360,11 +360,11 @@ export default function TransactionEntryPage() {
                 className="flex items-center gap-2"
               >
                 <FontAwesomeIcon icon={faCheck} />
-                <span>Logged</span>
+                <span>{t("transactions.logged" as any)}</span>
               </motion.div>
             ) : (
               <motion.span key="log" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                Log {txType === "income" ? "Income" : "Expense"}
+                {txType === "income" ? t("transactions.logIncome" as any) : t("transactions.logExpense" as any)}
               </motion.span>
             )}
           </AnimatePresence>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useI18n } from "@/hooks/use-translations"
 import { motion, AnimatePresence } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
@@ -18,13 +19,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { PrivacyValue } from "@/components/privacy-value"
 
-const budgetCategories = [
-  { id: 1, name: "Housing", icon: faHome, spent: 1850, budget: 2200, gradient: "linear-gradient(135deg, #8F00FF 0%, #6B00CC 100%)", iconBg: "#FF8C00" },
-  { id: 2, name: "Cybernetics", icon: faCloud, spent: 420, budget: 600, gradient: "linear-gradient(135deg, #00838f 0%, #00D4FF 100%)", iconBg: "#00D4FF" },
-  { id: 3, name: "Entertainment", icon: faGamepad, spent: 285, budget: 200, gradient: "linear-gradient(135deg, #FF007F 0%, #CC0066 100%)", iconBg: "#FF007F" },
-  { id: 4, name: "Transport", icon: faCar, spent: 180, budget: 300, gradient: "linear-gradient(135deg, #00AA6E 0%, #00FF94 100%)", iconBg: "#00FF94" },
-  { id: 5, name: "Food & Dining", icon: faUtensils, spent: 680, budget: 800, gradient: "linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)", iconBg: "#00D4FF" },
-  { id: 6, name: "Health", icon: faHeartPulse, spent: 95, budget: 250, gradient: "linear-gradient(135deg, #00FF94 0%, #00CC77 100%)", iconBg: "#00FF94" },
+const budgetCategoriesData = [
+  { id: 1, key: "housing", icon: faHome, spent: 1850, budget: 2200, gradient: "linear-gradient(135deg, #8F00FF 0%, #6B00CC 100%)", iconBg: "#FF8C00" },
+  { id: 2, key: "cybernetics", icon: faCloud, spent: 420, budget: 600, gradient: "linear-gradient(135deg, #00838f 0%, #00D4FF 100%)", iconBg: "#00D4FF" },
+  { id: 3, key: "entertainment", icon: faGamepad, spent: 285, budget: 200, gradient: "linear-gradient(135deg, #FF007F 0%, #CC0066 100%)", iconBg: "#FF007F" },
+  { id: 4, key: "transport", icon: faCar, spent: 180, budget: 300, gradient: "linear-gradient(135deg, #00AA6E 0%, #00FF94 100%)", iconBg: "#00FF94" },
+  { id: 5, key: "foodDining", icon: faUtensils, spent: 680, budget: 800, gradient: "linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)", iconBg: "#00D4FF" },
+  { id: 6, key: "health", icon: faHeartPulse, spent: 95, budget: 250, gradient: "linear-gradient(135deg, #00FF94 0%, #00CC77 100%)", iconBg: "#00FF94" },
 ]
 
 const subscriptions = [
@@ -36,11 +37,12 @@ const subscriptions = [
 ]
 
 export default function BudgetingPage() {
+  const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<"envelopes" | "drainers">("envelopes")
   const [cancelledSubs, setCancelledSubs] = useState<number[]>([])
 
-  const totalBudget = budgetCategories.reduce((s, c) => s + c.budget, 0)
-  const totalSpent = budgetCategories.reduce((s, c) => s + c.spent, 0)
+  const totalBudget = budgetCategoriesData.reduce((s, c) => s + c.budget, 0)
+  const totalSpent = budgetCategoriesData.reduce((s, c) => s + c.spent, 0)
   const totalPercentage = totalSpent / totalBudget
 
   const activeSubs = subscriptions.filter((s) => !cancelledSubs.includes(s.id))
@@ -55,11 +57,11 @@ export default function BudgetingPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="flex items-baseline gap-2">
-            <span className="font-serif text-xl font-bold tracking-wider text-foreground">BUDGET</span>
-            <span className="font-serif text-xl font-bold tracking-wider text-neon-cyan" style={{ textShadow: "0 0 10px rgba(0,212,255,0.4)" }}>CONTROL</span>
+            <span className="font-serif text-xl font-bold tracking-wider text-foreground">{t("budgeting.budget" as any).toUpperCase()}</span>
+            <span className="font-serif text-xl font-bold tracking-wider text-neon-cyan" style={{ textShadow: "0 0 10px rgba(0,212,255,0.4)" }}>{t("budgeting.control" as any).toUpperCase()}</span>
           </h1>
           <p className="mt-0.5 font-mono text-[10px] tracking-[0.3em] text-neon-green">
-            PROTOCOL: ACTIVE
+            {t("budgeting.protocolActive" as any).toUpperCase()}
           </p>
         </div>
         <motion.button
@@ -77,8 +79,8 @@ export default function BudgetingPage() {
         style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
         {[
-          { key: "envelopes" as const, label: "LIQUID ENVELOPES" },
-          { key: "drainers" as const, label: "DRAINERS" },
+          { key: "envelopes" as const, labelKey: "budgeting.liquidEnvelopes" },
+          { key: "drainers" as const, labelKey: "budgeting.drainers" },
         ].map((tab) => {
           const isActive = activeTab === tab.key
           return (
@@ -99,7 +101,7 @@ export default function BudgetingPage() {
                 />
               )}
               <span className={`relative z-10 ${isActive ? "text-white" : "text-muted-foreground"}`}>
-                {tab.label}
+                {t(tab.labelKey as any).toUpperCase()}
               </span>
             </button>
           )
@@ -145,12 +147,12 @@ export default function BudgetingPage() {
                   </defs>
                 </svg>
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Spent</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("budgeting.totalSpent" as any)}</span>
                   <PrivacyValue className="font-mono text-3xl font-bold text-foreground" style={{ textShadow: "0 0 20px rgba(143,0,255,0.3)" }}>
                     ${totalSpent.toLocaleString()}
                   </PrivacyValue>
                   <span className="mt-0.5 font-mono text-xs text-neon-cyan">
-                    ${totalBudget.toLocaleString()} Limit
+                    ${totalBudget.toLocaleString()} {t("budgeting.limit" as any)}
                   </span>
                 </div>
               </div>
@@ -158,7 +160,7 @@ export default function BudgetingPage() {
 
             {/* Category Cards - 2 Column Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {budgetCategories.map((cat, i) => {
+              {budgetCategoriesData.map((cat, i) => {
                 const pct = Math.min((cat.spent / cat.budget) * 100, 100)
                 const isOver = cat.spent > cat.budget
                 return (
@@ -200,7 +202,7 @@ export default function BudgetingPage() {
 
                     {/* Name */}
                     <h3 className="font-serif text-sm font-bold tracking-wider text-white">
-                      {cat.name.toUpperCase()}
+                      {t(`budgeting.categories.${cat.key}` as any).toUpperCase()}
                     </h3>
 
                     {/* Amount + Percentage */}
@@ -236,13 +238,13 @@ export default function BudgetingPage() {
               style={{ backgroundColor: "rgba(255,0,127,0.08)", border: "1px solid rgba(255,0,127,0.15)" }}
             >
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Monthly Drain</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("budgeting.monthlyDrain" as any)}</p>
                 <PrivacyValue className="font-mono text-2xl font-bold text-neon-pink" style={{ textShadow: "0 0 10px rgba(255,0,127,0.4)" }}>
                   ${totalSubCost.toFixed(2)}
                 </PrivacyValue>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Active</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("budgeting.active" as any)}</p>
                 <p className="font-mono text-lg font-bold text-foreground">{activeSubs.length}</p>
               </div>
             </div>
@@ -273,7 +275,7 @@ export default function BudgetingPage() {
                     <p className={`text-sm font-medium ${isCancelled ? "text-muted-foreground line-through" : "text-foreground"}`}>
                       {sub.name}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">Next: {sub.nextBill}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("budgeting.next" as any)}: {sub.nextBill}</p>
                   </div>
                   <PrivacyValue className="font-mono text-sm font-bold text-foreground">
                     ${sub.price.toFixed(2)}

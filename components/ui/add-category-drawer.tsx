@@ -6,8 +6,10 @@ import { X } from "lucide-react"
 import { CATEGORIZED_ICONS } from "@/lib/icons"
 import { CategoryIcon } from "../category-icon"
 import { AddCategoryDrawerProps } from "@/types/categories.types"
+import { useI18n } from "@/hooks/use-translations"
 
 export const AddCategoryDrawer = ({ isOpen, onClose, txType, onSave }: AddCategoryDrawerProps) => {
+  const { t } = useI18n()
   const [name, setName] = useState("");
   const [selectedColor, setSelectedColor] = useState("#8F00FF");
   const [selectedIcon, setSelectedIcon] = useState("Plus");
@@ -40,12 +42,12 @@ export const AddCategoryDrawer = ({ isOpen, onClose, txType, onSave }: AddCatego
 
             {/* Input de Nombre */}
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground ml-1">Nombre</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground ml-1">{t("addCategory.name" as any)}</p>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ejem: Gimnasio, Freelance..."
+                placeholder={t("addCategory.placeholder" as any)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-white/30 transition-all placeholder:text-white/20"
               />
             </div>
@@ -53,7 +55,7 @@ export const AddCategoryDrawer = ({ isOpen, onClose, txType, onSave }: AddCatego
             {/* Selector de Color */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground ml-1">Color Personalizado</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground ml-1">{t("addCategory.customColor" as any)}</p>
                 <input 
                   type="color" 
                   value={selectedColor}
@@ -135,7 +137,7 @@ export const AddCategoryDrawer = ({ isOpen, onClose, txType, onSave }: AddCatego
                   onClick={() => onSave({ name, color: selectedColor, type: txType, icon: selectedIcon })}
                   className="flex-1 py-4 rounded-xl font-bold text-[10px] tracking-[0.2em] bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  GUARDAR CATEGORÍA
+                  {t("addCategory.saveButton" as any)}
                 </button>
             </div>
           </div>
