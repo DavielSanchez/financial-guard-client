@@ -471,6 +471,7 @@ export const en = {
     },
 
     headers: {
+      account: "Account",
       amountSpent: "Amount Spent",
       amountReceived: "Amount Received",
       addNote: "Add a note...",
@@ -1023,6 +1024,7 @@ export const es = {
     },
 
     headers: {
+      account: "Cuenta",
       amountSpent: "Cantidad Gastada",
       amountReceived: "Cantidad Recibida",
       addNote: "Agregar nota...",

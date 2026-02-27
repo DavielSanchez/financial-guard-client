@@ -16,23 +16,43 @@ import {
   faChevronDown,
 } from "@fortawesome/free-solid-svg-icons"
 import { PrivacyValue } from "@/components/privacy-value"
+import { useGoals } from "@/hooks/useGoals"
+import { useSettings } from "@/components/settings-provider"
 
 type GoalType = "open" | "progression"
 
 interface SavingsGoal {
-  id: number
+  id: string
   name: string
   type: GoalType
   target: number
   saved: number
   createdAt: string
-  // Progression-specific
   startAmount?: number
-  increment?: number // how much the deposit grows each day (e.g. +1, +5, +10)
+  increment?: number
   currentDay?: number
   lastCheckIn?: string
   streak?: number
-  challengeDays?: number // total days of the challenge
+  challengeDays?: number
+}
+
+/** Map API Goal to UI SavingsGoal */
+function apiGoalToSavingsGoal(g: import("@/types/goals.types").Goal): SavingsGoal {
+  const isProgression = g.piggy_type === "daily"
+  return {
+    id: g.id,
+    name: g.name,
+    type: isProgression ? "progression" : "open",
+    target: g.target_amount,
+    saved: g.saved_amount,
+    createdAt: g.created_at?.split("T")[0] ?? "",
+    startAmount: g.start_amount,
+    increment: g.increment_amount,
+    currentDay: g.current_day,
+    lastCheckIn: g.last_check_in ?? undefined,
+    streak: g.streak,
+    challengeDays: g.challenge_days,
+  }
 }
 
 // --- Math helpers ---
@@ -50,55 +70,6 @@ function progressionTotalForDays(startAmount: number, increment: number, days: n
 function getTodayDeposit(startAmount: number, increment: number, currentDay: number): number {
   return progressionDayAmount(startAmount, increment, currentDay + 1)
 }
-
-// --- Demo data ---
-
-const initialGoals: SavingsGoal[] = [
-  {
-    id: 1,
-    name: "Emergency Fund",
-    type: "open",
-    target: 5000,
-    saved: 3200,
-    createdAt: "2025-11-01",
-  },
-  {
-    id: 2,
-    name: "New Laptop",
-    type: "open",
-    target: 2000,
-    saved: 2000,
-    createdAt: "2025-09-15",
-  },
-  {
-    id: 3,
-    name: "Daily Challenge",
-    type: "progression",
-    target: 0,
-    startAmount: 1,
-    increment: 1, // Day1=$1, Day2=$2, Day3=$3...
-    currentDay: 18,
-    challengeDays: 30,
-    lastCheckIn: new Date().toISOString().split("T")[0],
-    saved: 171, // 1+2+...+18
-    streak: 18,
-    createdAt: "2026-01-20",
-  },
-  {
-    id: 4,
-    name: "Reto $10",
-    type: "progression",
-    target: 0,
-    startAmount: 10,
-    increment: 1, // Day1=$10, Day2=$11, Day3=$12...
-    currentDay: 7,
-    challengeDays: 30,
-    lastCheckIn: new Date(Date.now() - 86400000).toISOString().split("T")[0],
-    saved: 112, // 10+11+12+13+14+15+16+17 = wrong, recalc: sum(10..16) = 7*10 + 1*(7*6/2) = 70+21 = 91
-    streak: 6,
-    createdAt: "2026-02-01",
-  },
-]
 
 // --- Particle Explosion ---
 
@@ -152,12 +123,16 @@ function PiggyBank({
   onDeposit,
   onDelete,
   t,
+  isContributing,
+  isDeleting,
 }: {
   goal: SavingsGoal
-  onCheckIn: (id: number) => void
-  onDeposit: (id: number, amount: number) => void
-  onDelete: (id: number) => void
+  onCheckIn: (id: string, amount: number) => void
+  onDeposit: (id: string, amount: number) => void
+  onDelete: (id: string) => void
   t: (key: string, params?: Record<string, string | number>) => string
+  isContributing: boolean
+  isDeleting: boolean
 }) {
   const [depositInput, setDepositInput] = useState("")
   const [showDeposit, setShowDeposit] = useState(false)
@@ -194,6 +169,13 @@ function PiggyBank({
       onDeposit(goal.id, amt)
       setDepositInput("")
       setShowDeposit(false)
+    }
+  }
+
+  const handleCheckInClick = () => {
+    if (goal.type === "progression") {
+      const amt = getTodayDeposit(goal.startAmount || 1, goal.increment || 1, (goal.currentDay || 0) + 1)
+      onCheckIn(goal.id, amt)
     }
   }
 
@@ -320,6 +302,7 @@ function PiggyBank({
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => onDelete(goal.id)}
+                    disabled={isDeleting}
                     className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
                     style={{ backgroundColor: "rgba(255,0,127,0.3)" }}
                   >
@@ -437,7 +420,8 @@ function PiggyBank({
             {canCheckInToday ? (
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onCheckIn(goal.id)}
+                onClick={handleCheckInClick}
+                disabled={isContributing}
                 className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-white"
                 style={{
                   background: "linear-gradient(135deg, #8F00FF, #00D4FF)",
@@ -543,16 +527,30 @@ function PiggyBank({
 
 export default function SavingsGoalsPage() {
   const { t } = useI18n()
-  const [goals, setGoals] = useState<SavingsGoal[]>(initialGoals)
-  const [showCreate, setShowCreate] = useState(false)
+  const { currency } = useSettings()
+  const {
+    goals: apiGoals,
+    isLoading: loadingGoals,
+    createGoal,
+    contribute,
+    deleteGoal,
+    isCreating,
+    isContributing,
+    isDeleting,
+  } = useGoals()
 
-  // Form state
+  const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [newType, setNewType] = useState<GoalType>("open")
   const [newTarget, setNewTarget] = useState("")
   const [newStartAmount, setNewStartAmount] = useState("1")
   const [newIncrement, setNewIncrement] = useState("1")
   const [newChallengeDays, setNewChallengeDays] = useState("30")
+
+  const goals = useMemo(
+    () => apiGoals.map(apiGoalToSavingsGoal),
+    [apiGoals]
+  )
 
   const totalSaved = useMemo(
     () => goals.reduce((s, g) => s + g.saved, 0),
@@ -577,73 +575,92 @@ export default function SavingsGoalsPage() {
     )
   }, [newStartAmount, newIncrement, newChallengeDays])
 
-  const handleCheckIn = useCallback((goalId: number) => {
-    setGoals((prev) =>
-      prev.map((g) => {
-        if (g.id !== goalId || g.type !== "progression") return g
-        const nextDay = (g.currentDay || 0) + 1
-        const deposit = progressionDayAmount(
-          g.startAmount || 1,
-          g.increment || 1,
-          nextDay
-        )
-        return {
-          ...g,
-          currentDay: nextDay,
-          saved: g.saved + deposit,
-          streak: (g.streak || 0) + 1,
-          lastCheckIn: new Date().toISOString().split("T")[0],
-        }
-      })
-    )
-  }, [])
+  const handleCheckIn = useCallback(
+    async (goalId: string, amount: number) => {
+      try {
+        await contribute({ id: goalId, amount })
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    [contribute]
+  )
 
-  const handleDeposit = useCallback((goalId: number, amount: number) => {
-    setGoals((prev) =>
-      prev.map((g) =>
-        g.id === goalId ? { ...g, saved: g.saved + amount } : g
-      )
-    )
-  }, [])
+  const handleDeposit = useCallback(
+    async (goalId: string, amount: number) => {
+      try {
+        await contribute({ id: goalId, amount })
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    [contribute]
+  )
 
-  const handleDelete = useCallback((goalId: number) => {
-    setGoals((prev) => prev.filter((g) => g.id !== goalId))
-  }, [])
+  const handleDelete = useCallback(
+    async (goalId: string) => {
+      try {
+        await deleteGoal(goalId)
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    [deleteGoal]
+  )
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName) return
 
     const start = parseFloat(newStartAmount) || 1
     const inc = parseFloat(newIncrement) || 1
     const days = parseInt(newChallengeDays) || 30
+    const targetVal = newType === "open" ? parseFloat(newTarget) || 1000 : progressionTotalForDays(start, inc, days)
 
-    const goal: SavingsGoal = {
-      id: Date.now(),
-      name: newName,
-      type: newType,
-      target: newType === "open" ? parseFloat(newTarget) || 1000 : 0,
-      saved: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-      ...(newType === "progression" && {
-        startAmount: start,
-        increment: inc,
-        challengeDays: days,
-        currentDay: 0,
-        lastCheckIn: "",
-        streak: 0,
-      }),
+    const deadline = new Date()
+    if (newType === "progression") {
+      deadline.setDate(deadline.getDate() + days)
+    } else {
+      deadline.setFullYear(deadline.getFullYear() + 1)
     }
-    setGoals((prev) => [...prev, goal])
-    setNewName("")
-    setNewTarget("")
-    setNewStartAmount("1")
-    setNewIncrement("1")
-    setNewChallengeDays("30")
-    setShowCreate(false)
+
+    try {
+      await createGoal({
+        name: newName,
+        target_amount: targetVal,
+        is_piggy_bank: true,
+        piggy_type: newType === "progression" ? "daily" : "open",
+        start_amount: newType === "progression" ? start : undefined,
+        increment_amount: newType === "progression" ? inc : undefined,
+        color: "#8F00FF",
+        icon: "PiggyBank",
+        description: null,
+        saved_already: 0,
+        currency,
+        deadline: deadline.toISOString().split("T")[0],
+        notify_inactivity_days: 3,
+        notify_on_risk: true,
+      })
+      setNewName("")
+      setNewTarget("")
+      setNewStartAmount("1")
+      setNewIncrement("1")
+      setNewChallengeDays("30")
+      setShowCreate(false)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  if (loadingGoals) {
+    return (
+      <div className="flex flex-col gap-5 px-4 pt-6 pb-4 lg:px-0">
+        <div className="h-64 animate-pulse rounded-2xl bg-muted/20" />
+      </div>
+    )
   }
 
   return (
-    <div className="flex flex-col gap-5 px-4 pt-6 pb-4">
+    <div className="flex flex-col gap-5 px-4 pt-6 pb-4 lg:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -947,7 +964,7 @@ export default function SavingsGoalsPage() {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCreate}
-                disabled={!newName}
+                disabled={!newName || isCreating}
                 className="rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
                 style={{
                   background: "linear-gradient(135deg, #8F00FF, #00D4FF)",
@@ -972,6 +989,8 @@ export default function SavingsGoalsPage() {
               onDeposit={handleDeposit}
               onDelete={handleDelete}
               t={t}
+              isContributing={isContributing}
+              isDeleting={isDeleting}
             />
           ))}
         </AnimatePresence>

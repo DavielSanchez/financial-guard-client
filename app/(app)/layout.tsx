@@ -18,7 +18,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {/* Main content + BottomNav (children rendered once) */}
         <SidebarInset className="min-h-screen flex-1">
           <main className="min-h-screen bg-background pb-20 lg:pb-6 lg:px-6">
-            {children}
+            <div className="mx-auto h-full w-full max-w-2xl lg:max-w-4xl xl:max-w-5xl">
+              {children}
+            </div>
           </main>
           <BottomNav />
         </SidebarInset>

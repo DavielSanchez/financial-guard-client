@@ -52,7 +52,7 @@ export default function BudgetingPage() {
   const strokeOffset = circumference * (1 - totalPercentage)
 
   return (
-    <div className="flex flex-col gap-5 px-4 pt-6 pb-4">
+    <div className="flex flex-col gap-5 px-4 pt-6 pb-4 lg:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -158,8 +158,8 @@ export default function BudgetingPage() {
               </div>
             </div>
 
-            {/* Category Cards - 2 Column Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Category Cards - 2 col mobile, 3 col desktop */}
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
               {budgetCategoriesData.map((cat, i) => {
                 const pct = Math.min((cat.spent / cat.budget) * 100, 100)
                 const isOver = cat.spent > cat.budget

@@ -78,7 +78,7 @@ export default function AiCoachPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] flex-col px-4 pt-6">
+    <div className="mx-auto flex h-[calc(100vh-5rem)] max-w-2xl flex-col px-4 pt-6 lg:px-0">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
         {/* Pulsing Orb */}

@@ -25,6 +25,7 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { useAccounts } from "@/hooks/useAccounts"
 import { useRecentTransactions } from "@/hooks/useRecentTransactions"
 import { CategoryIcon } from "@/components/category-icon"
+import { hexToRgba } from "@/lib/hexToRgba "
 
 type TimePeriod = "Day" | "Week" | "Month" | "Year"
 type BalanceTab = "BALANCE" | "INCOME" | "EXPENSE"
@@ -298,48 +299,6 @@ export default function DashboardPage() {
     </motion.div>
   )
 
-  const renderAccountsList = () => (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          {t("dashboard.accounts" as any)}
-        </h2>
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-          {accounts.length} {t("dashboard.active" as any).toUpperCase()}
-        </span>
-      </div>
-      <div className="flex flex-col gap-3">
-        {isLoadingAccounts && (
-          <div className="h-24 rounded-2xl border border-glass-border bg-glass-bg" />
-        )}
-        {!isLoadingAccounts &&
-          accounts.map((acc) => (
-            <div
-              key={acc.id}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-glass-border bg-glass-bg p-4"
-            >
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {acc.type}
-                </span>
-                <span className="truncate text-sm font-bold text-foreground">
-                  {acc.name}
-                </span>
-              </div>
-              <div className="text-right">
-                <PrivacyValue className="font-mono text-sm font-bold text-foreground">
-                  {formatCurrency(acc.balance)}
-                </PrivacyValue>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {acc.currency}
-                </span>
-              </div>
-            </div>
-          ))}
-      </div>
-    </div>
-  )
-
   const renderRecentTable = () => (
     <div className="rounded-2xl border border-glass-border bg-glass-bg p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -390,7 +349,11 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="flex h-9 w-9 items-center justify-center rounded-xl"
-                          style={{ backgroundColor: `${tx.categories?.color}20` }}
+                          style={{
+                            backgroundColor: tx.categories?.color
+                              ? hexToRgba(tx.categories.color, 0.15)
+                              : "#000000"
+                          }}
                         >
                           <CategoryIcon
                             name={tx.categories?.icon}
@@ -414,7 +377,7 @@ export default function DashboardPage() {
                     <td className="py-3 pr-4 text-xs text-muted-foreground">
                       {tx.categories?.name}
                     </td>
-                    <td className="py-3 pr-4 text-xs text-muted-foreground">
+                    <td className="py-3 pr-4 truncate text-xs text-muted-foreground">
                       {formattedDate}
                     </td>
                     <td className="py-3 text-right">
@@ -599,23 +562,21 @@ export default function DashboardPage() {
         {renderRecentTable()}
       </div>
 
-      {/* Desktop mega dashboard (sidebar comes from layout) */}
+      {/* Desktop layout - grid for better use of space */}
       <div className="hidden h-full lg:block">
-        <div className="mx-auto flex h-full max-w-7xl flex-col gap-6">
-          <div className="grid grid-cols-12 items-center gap-4 mt-2">
-            <div className="col-span-12">{renderHeader()}</div>
+        <div className="flex h-full flex-col gap-6">
+          {renderHeader()}
+          <div className="flex flex-wrap gap-2">{renderPeriodSelector()}</div>
+          <div className="grid gap-6 xl:grid-cols-3">
+            <div className="xl:col-span-2 space-y-6">
+              {renderBalanceCard("lg:p-6")}
+              {renderRecentTable()}
+            </div>
+            <div className="space-y-6">
+              {renderInfoRowMobile()}
+              {renderSavingsWidget()}
+            </div>
           </div>
-
-          <div className="grid grid-cols-12 gap-6">
-                <div className="col-span-4 flex ">
-                  {renderPeriodSelector()}
-                </div>
-                <div className="col-span-12">{renderBalanceCard("lg:p-6")}</div>
-                <div className="col-span-12">{renderInfoRowMobile()}</div>
-                <div className="col-span-12">{renderSavingsWidget()}</div>
-
-                <div className="col-span-12">{renderRecentTable()}</div>
-              </div>
         </div>
       </div>
     </>

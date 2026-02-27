@@ -96,7 +96,7 @@ const variants = {
 }
 
   return (
-    <div className="flex flex-col gap-5 px-4 pt-6 select-none">
+    <div className="flex flex-col gap-5 px-4 pt-6 select-none lg:max-w-2xl lg:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -9,45 +9,68 @@ import {
   faCheck,
   faArrowDown,
   faArrowUp,
+  faCreditCard,
 } from "@fortawesome/free-solid-svg-icons"
 import { useI18n } from "@/hooks/use-translations"
 import { GlassCard } from "@/components/glass-card"
 import { useCategories } from "@/hooks/useCategories"
 import { CategoryIcon } from "@/components/category-icon"
-import { LucideProps } from "lucide-react"
 import { AddCategoryDrawer } from "@/components/ui/add-category-drawer"
+import { useTransactions } from "@/hooks/useTransactions"
+import { useAccounts } from "@/hooks/useAccounts"
+import { useSettings } from "@/components/settings-provider"
 
 const quickRecurring = [
-  { labelKey: "transactions.quickItems.coffee", amount: "5.50", category: "food" },
-  { labelKey: "transactions.quickItems.lunch", amount: "12.00", category: "food" },
-  { labelKey: "transactions.quickItems.gas", amount: "45.00", category: "transport" },
-  { labelKey: "transactions.quickItems.gym", amount: "45.00", category: "health" },
+  { labelKey: "transactions.quickItems.coffee", amount: "5.50" },
+  { labelKey: "transactions.quickItems.lunch", amount: "12.00" },
+  { labelKey: "transactions.quickItems.gas", amount: "45.00" },
+  { labelKey: "transactions.quickItems.gym", amount: "45.00" },
 ]
 
 export default function TransactionEntryPage() {
   const { t } = useI18n()
-  const { categories, loading: loadingCats, addCategory } = useCategories()
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { currency } = useSettings()
+  const { categories, addCategory } = useCategories()
+  const { accounts, isLoading: loadingAccounts } = useAccounts()
+  const { addTransaction, loading: submitting } = useTransactions()
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [txType, setTxType] = useState<"expense" | "income">("expense")
   const [amount, setAmount] = useState("")
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [note, setNote] = useState("")
   const [scanning, setScanning] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const accentColor = txType === "income" ? "#00FF94" : "#8F00FF"
-  const accentName = txType === "income" ? "neon-green" : "neon-purple"
+  // Auto-select first account when loaded
+  const activeAccount = selectedAccount || accounts[0]?.id || null
 
-  const handleSubmit = () => {
-    if (!amount || !selectedCategory) return
+  const accentColor = txType === "income" ? "#00FF94" : "#8F00FF"
+
+  const handleSubmit = async () => {
+    if (!amount || !selectedCategory || !activeAccount) return
     setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
+    try {
+      await addTransaction({
+        account_id: activeAccount,
+        category_id: selectedCategory,
+        amount: parseFloat(amount),
+        type: txType,
+        currency,
+        note: note || undefined,
+        date: new Date().toISOString(),
+        is_recurring: false,
+        receipt_url: null,
+      })
       setAmount("")
       setSelectedCategory(null)
       setNote("")
-    }, 1500)
+      setTimeout(() => setSubmitted(false), 1500)
+    } catch (error) {
+      console.error(error)
+      setSubmitted(false)
+    }
   }
 
   const handleScan = () => {
@@ -55,24 +78,21 @@ export default function TransactionEntryPage() {
     setTimeout(() => {
       setScanning(false)
       setAmount("34.99")
-      setSelectedCategory("shopping")
     }, 2000)
   }
 
   const handleSaveCategory = async (newCategoryData: any) => {
     try {
-      await addCategory(newCategoryData);
-      setIsDrawerOpen(false);
-      
-      console.log("Categoría creada con éxito");
+      await addCategory(newCategoryData)
+      setIsDrawerOpen(false)
     } catch (error: any) {
-      alert(error.message);
+      alert(error.message)
     }
-  };
+  }
 
 
   return (
-    <div className="flex flex-col gap-5 px-4 pt-6">
+    <div className="flex flex-col gap-5 px-4 pt-6 lg:px-0">
       {/* Type Toggle */}
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-xl font-bold tracking-wider text-foreground">
@@ -122,6 +142,50 @@ export default function TransactionEntryPage() {
           })}
         </div>
       </div>
+
+      {/* Account Selector */}
+      {!loadingAccounts && accounts.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-muted-foreground/30 bg-muted/5 px-4 py-6 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t("wallet.vault.noAccounts" as any)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            {t("wallet.vault.initializeFirst" as any)}
+          </p>
+        </div>
+      )}
+      {accounts.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t("transactions.headers.account" as any)}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {accounts.map((acc) => {
+              const isActive = activeAccount === acc.id
+              return (
+                <motion.button
+                  key={acc.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedAccount(acc.id)}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+                    isActive ? "bg-neon-purple/20 border border-neon-purple/40" : "glass"
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={faCreditCard}
+                    className="text-[10px]"
+                    style={{ color: isActive ? "var(--neon-1)" : "var(--muted-foreground)" }}
+                  />
+                  <span className={isActive ? "text-foreground" : "text-muted-foreground"}>
+                    {acc.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/80">{acc.currency}</span>
+                </motion.button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Amount Input */}
       <GlassCard
@@ -272,10 +336,7 @@ export default function TransactionEntryPage() {
             <motion.button
               key={item.labelKey}
               whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setAmount(item.amount)
-                setSelectedCategory(item.category)
-              }}
+              onClick={() => setAmount(item.amount)}
               className="glass flex items-center gap-2 rounded-full px-4 py-2 text-xs text-foreground transition-colors hover:bg-white/10"
             >
               <span>{t(item.labelKey as any)}</span>
@@ -344,7 +405,7 @@ export default function TransactionEntryPage() {
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handleSubmit}
-          disabled={!amount || !selectedCategory || submitted}
+          disabled={!amount || !selectedCategory || !activeAccount || submitted || submitting}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           style={{
             background: accentColor,
