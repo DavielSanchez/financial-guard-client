@@ -1,71 +1,87 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
-  faWallet,
   faArrowRightArrowLeft,
   faPlus,
   faLock,
   faEye,
   faEyeSlash,
-  faChevronLeft,
-  faChevronRight,
   faCreditCard,
   faBuildingColumns,
   faCoins,
+  faWallet,
   faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons"
 import { GlassCard } from "@/components/glass-card"
 import { PrivacyValue } from "@/components/privacy-value"
 import { useI18n } from "@/hooks/use-translations"
+import { useAccounts } from "@/hooks/useAccounts"
+import { useGoals } from "@/hooks/useGoals"
+import { useSettings } from "@/components/settings-provider"
+import type { Account } from "@/types/accounts.types"
 
-// Datos originales del usuario
-const cards = [
-  {
-    id: 1,
-    name: "Main Checking",
-    number: "**** 4829",
-    balance: 12450.8,
-    type: "Visa",
-    gradient: "linear-gradient(135deg, var(--neon-1) 0%, var(--neon-2) 100%)",
-    icon: faCreditCard,
-  },
-  {
-    id: 2,
-    name: "Savings Account",
-    number: "**** 7731",
-    balance: 8920.0,
-    type: "Mastercard",
-    gradient: "linear-gradient(135deg, var(--neon-3) 0%, var(--neon-1) 100%)",
-    icon: faBuildingColumns,
-  },
-  {
-    id: 3,
-    name: "Crypto Wallet",
-    number: "**** 0x3F",
-    balance: 3192.0,
-    type: "Blockchain",
-    gradient: "linear-gradient(135deg, var(--neon-4) 0%, var(--neon-2) 100%)",
-    icon: faCoins,
-  },
-]
+const TYPE_ICONS: Record<string, typeof faCreditCard> = {
+  checking: faCreditCard,
+  savings: faBuildingColumns,
+  credit_card: faCreditCard,
+  cash: faWallet,
+  investment: faCoins,
+}
 
-const vaultAccounts = [
-  { id: 1, name: "Emergency Fund", balance: 15000, hidden: true },
-  { id: 2, name: "Tax Reserve", balance: 4200, hidden: true },
-]
+function getAccountIcon(type: string) {
+  return TYPE_ICONS[type?.toLowerCase()] ?? faCreditCard
+}
+
+function accountToCard(acc: Account) {
+  const color = acc.color || "#8F00FF"
+  const hex = color.replace("#", "")
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+  const darker = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`
+  return {
+    ...acc,
+    number: "•••• " + (acc.id?.slice(-4) ?? "----"),
+    gradient: `linear-gradient(135deg, ${color} 0%, ${darker} 100%)`,
+    icon: getAccountIcon(acc.type),
+  }
+}
 
 export default function WalletPage() {
   const { t } = useI18n()
+  const { formatCurrency } = useSettings()
+  const { accounts: rawAccounts, isLoading: loadingAccounts } = useAccounts()
+  const { goals } = useGoals()
+
+  const cards = useMemo(() => rawAccounts.filter((a) => !a.is_hidden).map(accountToCard), [rawAccounts])
+  const vaultAccounts = useMemo(
+    () =>
+      goals
+        .filter((g) => g.piggy_type === "open" || g.target_amount > 0)
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          balance: g.saved_already ?? g.saved_amount ?? 0,
+          hidden: true,
+        })),
+    [goals]
+  )
+
   const [currentCard, setCurrentCard] = useState(0)
   const [direction, setDirection] = useState(0)
   const [bridgeMode, setBridgeMode] = useState(false)
   const [bridgeFrom, setBridgeFrom] = useState(0)
   const [bridgeTo, setBridgeTo] = useState(1)
-  const [vaultRevealed, setVaultRevealed] = useState<number[]>([])
+
+  useEffect(() => {
+    if (cards.length > 0 && bridgeFrom >= cards.length) setBridgeFrom(0)
+    if (cards.length > 0 && bridgeTo >= cards.length) setBridgeTo(Math.min(1, cards.length - 1))
+  }, [cards.length, bridgeFrom, bridgeTo])
+  const [vaultRevealed, setVaultRevealed] = useState<string[]>([])
 
   // Función para manejar el cambio de tarjeta con límites correctos
   const handleStep = (dir: number) => {
@@ -218,7 +234,7 @@ const variants = {
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{t("wallet.liquidAssets" as any)}</p>
                               <PrivacyValue className="font-mono text-3xl font-black italic text-white tracking-tighter leading-none">
-                                ${cards[currentCard].balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                {formatCurrency(cards[currentCard].balance)}
                               </PrivacyValue>
                             </div>
                           </div>
@@ -269,7 +285,7 @@ const variants = {
                 </GlassCard>
                 <FontAwesomeIcon icon={faArrowRightArrowLeft} className="text-neon-cyan animate-pulse" />
                 <GlassCard className="flex-1 p-3" glowColor="cyan">
-                  <p className="text-[10px] uppercase text-muted-foreground">To</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">{t("wallet.bridge.to" as any)}</p>
                   <select
                     value={bridgeTo}
                     onChange={(e) => setBridgeTo(Number(e.target.value))}
@@ -286,7 +302,7 @@ const variants = {
                 <input type="text" placeholder="0.00" className="w-full bg-transparent text-center font-mono text-3xl font-black text-foreground outline-none" />
               </GlassCard>
               <motion.button whileTap={{ scale: 0.98 }} className="w-full rounded-xl bg-neon-cyan py-4 text-xs font-black uppercase text-background">
-                Execute Bridge
+                {t("wallet.bridge.execute" as any)}
               </motion.button>
             </motion.div>
           )}
@@ -307,7 +323,7 @@ const variants = {
                 <div>
                   <p className="text-sm font-bold">{acc.name}</p>
                   <PrivacyValue className={`font-mono text-lg font-bold ${!isRevealed ? "privacy-blur" : ""}`}>
-                    ${acc.balance.toLocaleString()}.00
+                    {formatCurrency(acc.balance)}
                   </PrivacyValue>
                 </div>
                 <button 
@@ -333,7 +349,7 @@ const variants = {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold">{t("wallet.link.savingsVault" as any)}</p>
-            <p className="text-[10px] text-muted-foreground">{t("wallet.link.activeTargets" as any, { count: 4 })}</p>
+            <p className="text-[10px] text-muted-foreground">{t("wallet.link.activeTargets" as any, { count: goals.length })}</p>
           </div>
           <FontAwesomeIcon icon={faChevronRight} className="text-xs text-muted-foreground" />
         </motion.div>

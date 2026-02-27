@@ -39,19 +39,33 @@ interface SavingsGoal {
 /** Map API Goal to UI SavingsGoal */
 function apiGoalToSavingsGoal(g: import("@/types/goals.types").Goal): SavingsGoal {
   const isProgression = g.piggy_type === "daily"
+  const saved = g.saved_already ?? g.saved_amount ?? 0
+  const created = g.created_at ? new Date(g.created_at) : new Date()
+  const deadline = g.deadline ? new Date(g.deadline) : new Date()
+  const challengeDays = g.challenge_days ?? Math.max(1, Math.ceil((deadline.getTime() - created.getTime()) / (24 * 60 * 60 * 1000)))
+  const lastContrib = g.last_contribution_date ?? g.last_check_in ?? null
+
+  // Derive currentDay from last contribution (days since created, 0-indexed for "next day to do")
+  let currentDay = g.current_day ?? 0
+  if (isProgression && lastContrib && g.created_at) {
+    const start = new Date(g.created_at).setHours(0, 0, 0, 0)
+    const last = new Date(lastContrib + "T12:00:00").getTime()
+    currentDay = Math.floor((last - start) / (24 * 60 * 60 * 1000))
+  }
+
   return {
     id: g.id,
     name: g.name,
     type: isProgression ? "progression" : "open",
-    target: g.target_amount,
-    saved: g.saved_amount,
+    target: g.target_amount ?? 0,
+    saved: Number(saved) || 0,
     createdAt: g.created_at?.split("T")[0] ?? "",
-    startAmount: g.start_amount,
-    increment: g.increment_amount,
-    currentDay: g.current_day,
-    lastCheckIn: g.last_check_in ?? undefined,
-    streak: g.streak,
-    challengeDays: g.challenge_days,
+    startAmount: g.start_amount ?? 0,
+    increment: g.increment_amount ?? 0,
+    currentDay,
+    lastCheckIn: lastContrib ?? undefined,
+    streak: g.streak ?? currentDay,
+    challengeDays,
   }
 }
 
@@ -333,7 +347,7 @@ function PiggyBank({
                   : "0 0 15px rgba(143,0,255,0.3)",
               }}
             >
-              ${goal.saved.toLocaleString()}
+              ${(goal.saved ?? 0).toLocaleString()}
             </PrivacyValue>
             <span className="font-mono text-xs text-muted-foreground">
               / ${effectiveTarget.toLocaleString()}
@@ -527,7 +541,7 @@ function PiggyBank({
 
 export default function SavingsGoalsPage() {
   const { t } = useI18n()
-  const { currency } = useSettings()
+  const { currency, formatCurrency } = useSettings()
   const {
     goals: apiGoals,
     isLoading: loadingGoals,
@@ -712,7 +726,7 @@ export default function SavingsGoalsPage() {
             className="font-mono text-2xl font-bold text-foreground"
             style={{ textShadow: "0 0 20px rgba(143,0,255,0.3)" }}
           >
-            ${totalSaved.toLocaleString()}
+            {formatCurrency(totalSaved)}
           </PrivacyValue>
         </div>
         <div
@@ -988,7 +1002,7 @@ export default function SavingsGoalsPage() {
               onCheckIn={handleCheckIn}
               onDeposit={handleDeposit}
               onDelete={handleDelete}
-              t={t}
+              t={t as (key: string, params?: Record<string, string | number>) => string}
               isContributing={isContributing}
               isDeleting={isDeleting}
             />
