@@ -33,6 +33,16 @@ export const metadata: Metadata = {
   title: "Financial Guard | Cyber Finance",
   description:
     "High-end fintech command center for managing your digital financial empire.",
+  applicationName: "Financial Guard",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Financial Guard",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default function RootLayout({

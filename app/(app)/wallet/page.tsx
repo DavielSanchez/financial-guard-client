@@ -19,7 +19,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { GlassCard } from "@/components/glass-card"
 import { PrivacyValue } from "@/components/privacy-value"
-import { AddAccountDrawer } from "@/components/add-account-drawer"
+import { AddAccountPanel } from "@/components/add-account-panel"
 import { useI18n } from "@/hooks/use-translations"
 import { useAccounts } from "@/hooks/useAccounts"
 import { useGoals } from "@/hooks/useGoals"
@@ -59,7 +59,7 @@ export default function WalletPage() {
   const { formatCurrency } = useSettings()
   const { accounts: rawAccounts, isLoading: loadingAccounts, createAccount, isCreating } = useAccounts()
   const { goals } = useGoals()
-  const [addDrawerOpen, setAddDrawerOpen] = useState(false)
+  const [addPanelOpen, setAddPanelOpen] = useState(false)
 
   const cards = useMemo(() => rawAccounts.filter((a) => !a.is_hidden).map(accountToCard), [rawAccounts])
   const totalBalance = useMemo(() => cards.reduce((s, c) => s + c.balance, 0), [cards])
@@ -96,7 +96,8 @@ export default function WalletPage() {
     }
   }
 
-  const openAddAccount = () => setAddDrawerOpen(true)
+  const openAddAccount = () => setAddPanelOpen(true)
+  const toggleAddPanel = () => setAddPanelOpen((p) => !p)
 
   const variants = {
     enter: (dir: number) => ({
@@ -142,16 +143,26 @@ export default function WalletPage() {
             )}
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={openAddAccount}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_20px_var(--primary)]/30 transition-shadow hover:shadow-[0_0_24px_var(--primary)]/40"
+              onClick={toggleAddPanel}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl text-primary-foreground shadow-[0_0_20px_var(--primary)]/30 transition-shadow hover:shadow-[0_0_24px_var(--primary)]/40 ${
+                addPanelOpen ? "bg-primary/80" : "bg-primary"
+              }`}
             >
-              <FontAwesomeIcon icon={faPlus} className="text-lg" />
+              <FontAwesomeIcon icon={faPlus} className={`text-lg transition-transform ${addPanelOpen ? "rotate-45" : ""}`} />
             </motion.button>
           </div>
         </div>
       </header>
 
       <main className="flex flex-1 flex-col gap-6 px-4 pb-24 pt-6 lg:px-0">
+        {/* Panel Crear Cuenta (despliega desde abajo como goals) */}
+        <AddAccountPanel
+          open={addPanelOpen}
+          onOpenChange={setAddPanelOpen}
+          onSave={async (p) => { await createAccount(p) }}
+          isPending={isCreating}
+        />
+
         {/* Balance total (solo si hay cuentas) */}
         {cards.length > 0 && (
           <motion.div
@@ -436,12 +447,6 @@ export default function WalletPage() {
         </Link>
       </main>
 
-      <AddAccountDrawer
-        open={addDrawerOpen}
-        onOpenChange={setAddDrawerOpen}
-        onSave={async (p) => { await createAccount(p) }}
-        isPending={isCreating}
-      />
     </div>
   )
 }
