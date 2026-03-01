@@ -17,13 +17,13 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && (isError || !user)) {
+    if (!isLoading && !user) {
       router.replace("/login")
     }
-  }, [isLoading, isError, user, router])
+  }, [isLoading, user, router])
 
   if (isLoading) return <NeonSpinner />
-  if (isError || !user) return <NeonSpinner />
+  if (!isLoading && !user) return <NeonSpinner />
 
   return <>{children}</>
 }

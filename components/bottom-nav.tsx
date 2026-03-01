@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { useI18n } from "@/hooks/use-translations"
 import { motion } from "framer-motion"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -25,8 +26,13 @@ const rightItems = [
 ] as const
 
 export function BottomNav() {
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const { t } = useI18n()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const renderItem = (item: { href: string; icon: typeof faGrip; labelKey: string }) => {
     const isActive = pathname === item.href
@@ -63,6 +69,8 @@ export function BottomNav() {
       </Link>
     )
   }
+
+  if (!mounted) return null
 
   return (
     <nav

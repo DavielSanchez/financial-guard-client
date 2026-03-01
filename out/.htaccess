@@ -1,0 +1,21 @@
+# PWA & SPA Routing - Apache rewrite rules
+# Todas las rutas redirigen a index.html para evitar 404 al navegar o recargar
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # No reescribir archivos o directorios que existan
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Redirigir todo lo demás a index.html (SPA fallback)
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# Cache para assets estáticos (opcional)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType application/json "access plus 1 day"
+</IfModule>

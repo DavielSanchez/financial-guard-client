@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   Sidebar,
@@ -15,16 +16,28 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useI18n } from "@/hooks/use-translations"
-import { useAuthStore } from "@/store/use-auth-store"
 import {
   SIDEBAR_NAV_ITEMS,
   SIDEBAR_FOOTER_ITEMS,
 } from "@/config/sidebar-nav"
 
 export function AppSidebar() {
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const { t } = useI18n()
-  const user = useAuthStore((state) => state.user)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <Sidebar collapsible="icon" variant="inset">
+        <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4" style={{ borderColor: "var(--sidebar-border)" }} />
+        <SidebarContent />
+      </Sidebar>
+    )
+  }
 
   const getGreetingKey = () => {
     const h = new Date().getHours()

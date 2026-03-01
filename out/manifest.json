@@ -1,0 +1,19 @@
+{
+  "name": "Financial Guard",
+  "short_name": "FinGuard",
+  "description": "High-end fintech command center for managing your digital financial empire.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#8F00FF",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
