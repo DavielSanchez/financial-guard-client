@@ -2,6 +2,7 @@ import api from "@/lib/axios"
 import type {
   BudgetEnvelope,
   CreateEnvelopePayload,
+  CreateSubscriptionPayload,
   Subscription,
   SubscriptionsResponse,
 } from "@/types/budget.types"
@@ -52,6 +53,11 @@ export const budgetService = {
       subscriptions: data.subscriptions,
       total_monthly_drain: total,
     }
+  },
+
+  async createSubscription(payload: CreateSubscriptionPayload): Promise<Subscription> {
+    const { data } = await api.post<Subscription>("/budget/subscriptions", payload)
+    return data
   },
 
   async toggleSubscription(id: string, is_active: boolean): Promise<Subscription> {

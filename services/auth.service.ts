@@ -35,5 +35,14 @@ export const authService = {
   async getMe(): Promise<AuthUser> {
     const { data } = await api.get<AuthUser>("/auth/me")
     return data
+  },
+
+  /**
+   * Marca el onboarding como completado en Supabase.
+   * PUT /auth/onboarding - actualiza onboarding_completed: true en el perfil del usuario.
+   */
+  async completeOnboarding(): Promise<AuthUser> {
+    const { data } = await api.put<AuthUser>("/auth/onboarding", {})
+    return data
   }
 }

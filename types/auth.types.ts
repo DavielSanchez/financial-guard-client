@@ -7,9 +7,11 @@ export interface UserSettings {
 
 export interface UserProfile {
   firstName: string;
-  lastName: string;
-  fullName: string;
-  avatar: string | null;
+  lastName?: string;
+  fullName?: string;
+  avatar?: string | null;
+  avatarUrl?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface AuthUser {
@@ -20,9 +22,11 @@ export interface AuthUser {
     firstName: string;
     lastName?: string;
     avatarUrl?: string;
+    onboardingCompleted?: boolean;
   };
   settings: string;
-  lastSignIn: string;
+  onboardingCompleted?: boolean;
+  lastSignIn?: string;
 }
 
 export interface LoginResponse {
@@ -37,5 +41,6 @@ export interface AuthState {
   setUser: (user: AuthUser | null) => void;
   setHasHydrated: (state: boolean) => void;
   updateSettings: (newSettings: Partial<AuthUser['settings']>) => void;
+  setOnboardingCompleted: (completed: boolean) => void;
   clearAuth: () => void;
 }

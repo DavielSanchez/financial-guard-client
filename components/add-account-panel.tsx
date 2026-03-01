@@ -1,10 +1,13 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CategoryIcon } from "@/components/category-icon"
+import { CurrencyInput } from "@/components/currency-input"
 import { CATEGORIZED_ICONS } from "@/lib/icons"
+import { useI18n } from "@/hooks/use-translations"
 import type { CreateAccount } from "@/services/accounts.service"
+import type { Account } from "@/types/accounts.types"
 
 const ACCOUNT_TYPES = [
   { value: "bank", label: "Banco" },
@@ -30,39 +33,104 @@ const QUICK_COLORS = [
 interface AddAccountPanelProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (payload: CreateAccount) => void | Promise<void>
+  onSave: (payload: CreateAccount, accountId?: string) => void | Promise<void>
   isPending?: boolean
+  /** When provided, the panel opens in edit mode with pre-filled values */
+  account?: Account | null
 }
 
 const inputStyle = "rounded-xl px-4 py-3 text-sm text-foreground outline-none placeholder:text-white/30 focus:border-primary"
 const inputWrap = "w-full rounded-xl border border-white/10 bg-white/5"
 
-export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAccountPanelProps) {
+export function AddAccountPanel({
+  open,
+  onOpenChange,
+  onSave,
+  isPending,
+  account: editingAccount,
+}: AddAccountPanelProps) {
   const [name, setName] = useState("")
   const [type, setType] = useState<string>("bank")
-  const [balance, setBalance] = useState("0")
+  const [balance, setBalance] = useState(0)
   const [currency, setCurrency] = useState("USD")
   const [selectedIcon, setSelectedIcon] = useState("Wallet")
   const [selectedColor, setSelectedColor] = useState("#4CAF50")
   const [interestRate, setInterestRate] = useState("0")
   const [isHidden, setIsHidden] = useState(false)
 
+  const isEditMode = !!editingAccount
+
+  useEffect(() => {
+    if (open) {
+      if (editingAccount) {
+        const bal =
+          typeof editingAccount.balance === "string"
+            ? parseFloat(editingAccount.balance) || 0
+            : Number(editingAccount.balance) ?? 0
+        setName(editingAccount.name || "")
+        setType(editingAccount.type || "bank")
+        setBalance(bal)
+        setCurrency(editingAccount.currency || "USD")
+        setSelectedIcon(editingAccount.icon || "Wallet")
+        setSelectedColor(editingAccount.color || "#4CAF50")
+        setInterestRate(
+          String(
+            typeof editingAccount.interest_rate === "number"
+              ? editingAccount.interest_rate
+              : parseFloat(String(editingAccount.interest_rate || "0")) || 0
+          )
+        )
+        setIsHidden(!!editingAccount.is_hidden)
+      } else {
+        setName("")
+        setType("bank")
+        setBalance(0)
+        setCurrency("USD")
+        setSelectedIcon("Wallet")
+        setSelectedColor("#4CAF50")
+        setInterestRate("0")
+        setIsHidden(false)
+      }
+    }
+  }, [open, editingAccount])
+
   const reset = () => {
-    setName("")
-    setType("bank")
-    setBalance("0")
-    setCurrency("USD")
-    setSelectedIcon("Wallet")
-    setSelectedColor("#4CAF50")
-    setInterestRate("0")
-    setIsHidden(false)
+    if (editingAccount) {
+      const bal =
+        typeof editingAccount.balance === "string"
+          ? parseFloat(editingAccount.balance) || 0
+          : Number(editingAccount.balance) ?? 0
+      setName(editingAccount.name || "")
+      setType(editingAccount.type || "bank")
+      setBalance(bal)
+      setCurrency(editingAccount.currency || "USD")
+      setSelectedIcon(editingAccount.icon || "Wallet")
+      setSelectedColor(editingAccount.color || "#4CAF50")
+      setInterestRate(
+        String(
+          typeof editingAccount.interest_rate === "number"
+            ? editingAccount.interest_rate
+            : parseFloat(String(editingAccount.interest_rate || "0")) || 0
+        )
+      )
+      setIsHidden(!!editingAccount.is_hidden)
+    } else {
+      setName("")
+      setType("bank")
+      setBalance(0)
+      setCurrency("USD")
+      setSelectedIcon("Wallet")
+      setSelectedColor("#4CAF50")
+      setInterestRate("0")
+      setIsHidden(false)
+    }
   }
 
   const handleSave = async () => {
     const payload: CreateAccount = {
       name: name.trim(),
       type,
-      balance: parseFloat(balance) || 0,
+      balance: balance,
       currency,
       icon: selectedIcon,
       color: selectedColor,
@@ -70,7 +138,7 @@ export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAc
       is_hidden: isHidden,
     }
     try {
-      await onSave(payload)
+      await onSave(payload, editingAccount?.id)
       reset()
       onOpenChange(false)
     } catch {
@@ -78,6 +146,7 @@ export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAc
     }
   }
 
+  const { t } = useI18n()
   const financeIcons = CATEGORIZED_ICONS.find((g) => g.group === "Finanzas")?.icons ?? ["Wallet", "CreditCard", "Landmark", "PiggyBank", "Banknote", "Coins"]
 
   return (
@@ -99,7 +168,7 @@ export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAc
             }}
           >
             <h3 className="font-serif text-sm font-bold tracking-wider text-foreground">
-              Nueva Cuenta
+              {isEditMode ? t("wallet.editAccount" as any) : t("wallet.newAccount" as any)}
             </h3>
 
             {/* Nombre */}
@@ -132,15 +201,13 @@ export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAc
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">Balance</label>
-                <div className={`flex items-center gap-1 ${inputWrap} px-3 py-3`}>
-                  <span className="font-mono text-sm text-neon-purple">$</span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
+                <div className={`${inputWrap} px-3 py-3`}>
+                  <CurrencyInput
                     value={balance}
-                    onChange={(e) => setBalance(e.target.value.replace(/[^0-9.]/g, ""))}
+                    onChange={setBalance}
+                    prefix="$"
                     placeholder="0.00"
-                    className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+                    inputClassName="text-sm placeholder:text-muted-foreground/40"
                   />
                 </div>
               </div>
@@ -246,7 +313,7 @@ export function AddAccountPanel({ open, onOpenChange, onSave, isPending }: AddAc
                 boxShadow: "0 0 15px rgba(143,0,255,0.3)",
               }}
             >
-              {isPending ? "Guardando…" : "Crear cuenta"}
+              {isPending ? t("common.saving" as any) : isEditMode ? t("common.save" as any) : t("wallet.createAccount" as any)}
             </motion.button>
           </div>
         </motion.div>

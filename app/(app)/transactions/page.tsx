@@ -19,6 +19,7 @@ import { AddCategoryDrawer } from "@/components/ui/add-category-drawer"
 import { useTransactions } from "@/hooks/useTransactions"
 import { useAccounts } from "@/hooks/useAccounts"
 import { useSettings } from "@/components/settings-provider"
+import { CurrencyInput } from "@/components/currency-input"
 
 const quickRecurring = [
   { labelKey: "transactions.quickItems.coffee", amount: "5.50" },
@@ -35,7 +36,7 @@ export default function TransactionEntryPage() {
   const { addTransaction, loading: submitting } = useTransactions()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [txType, setTxType] = useState<"expense" | "income">("expense")
-  const [amount, setAmount] = useState("")
+  const [amount, setAmount] = useState(0)
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [note, setNote] = useState("")
@@ -55,7 +56,7 @@ export default function TransactionEntryPage() {
       await addTransaction({
         account_id: activeAccount,
         category_id: selectedCategory,
-        amount: parseFloat(amount),
+        amount,
         type: txType,
         currency,
         note: note || undefined,
@@ -63,7 +64,7 @@ export default function TransactionEntryPage() {
         is_recurring: false,
         receipt_url: null,
       })
-      setAmount("")
+      setAmount(0)
       setSelectedCategory(null)
       setNote("")
       setTimeout(() => setSubmitted(false), 1500)
@@ -77,7 +78,7 @@ export default function TransactionEntryPage() {
     setScanning(true)
     setTimeout(() => {
       setScanning(false)
-      setAmount("34.99")
+      setAmount(34.99)
     }, 2000)
   }
 
@@ -98,7 +99,7 @@ export default function TransactionEntryPage() {
         <h1 className="font-serif text-xl font-bold tracking-wider text-foreground">
           {t('transactions.title' as any).toUpperCase()}
         </h1>
-        <div className="glass flex rounded-xl p-1">
+        <div className="glass flex rounded-xl p-1" data-tour="tx-type-toggle">
           {(["expense", "income"] as const).map((type) => {
             const isActive = txType === type
             return (
@@ -195,28 +196,21 @@ export default function TransactionEntryPage() {
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
           {txType === "income" ? t('transactions.headers.amountReceived' as any) : t('transactions.headers.amountSpent' as any)}
         </p>
-        <div className="flex items-baseline gap-1">
-          <span
-            className="font-mono text-2xl font-bold"
-            style={{ color: accentColor }}
-          >
-            $
-          </span>
-          <input
-            type="text"
-            inputMode="decimal"
+        <div
+          className="flex items-baseline justify-center gap-1"
+          style={{
+            textShadow: amount
+              ? `0 0 20px ${accentColor}60, 0 0 40px ${accentColor}20`
+              : "none",
+          }}
+        >
+          <CurrencyInput
             value={amount}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9.]/g, "")
-              setAmount(v)
-            }}
+            onChange={setAmount}
+            prefix="$"
             placeholder="0.00"
-            className="w-48 bg-transparent text-center font-mono text-5xl font-bold italic text-foreground placeholder-muted-foreground/30 outline-none"
-            style={{
-              textShadow: amount
-                ? `0 0 20px ${accentColor}60, 0 0 40px ${accentColor}20`
-                : "none",
-            }}
+            className="justify-center"
+            inputClassName="w-48 text-center font-mono text-5xl font-bold italic placeholder-muted-foreground/30 outline-none"
           />
         </div>
         <input
@@ -336,7 +330,7 @@ export default function TransactionEntryPage() {
             <motion.button
               key={item.labelKey}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setAmount(item.amount)}
+              onClick={() => setAmount(parseFloat(item.amount))}
               className="glass flex items-center gap-2 rounded-full px-4 py-2 text-xs text-foreground transition-colors hover:bg-white/10"
             >
               <span>{t(item.labelKey as any)}</span>

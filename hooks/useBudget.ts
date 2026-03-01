@@ -2,7 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { budgetService } from "@/services/budget.service"
-import type { BudgetEnvelope, CreateEnvelopePayload, Subscription } from "@/types/budget.types"
+import type {
+  BudgetEnvelope,
+  CreateEnvelopePayload,
+  CreateSubscriptionPayload,
+  Subscription,
+} from "@/types/budget.types"
 
 const now = new Date()
 const currentMonth = now.getMonth() + 1
@@ -32,6 +37,14 @@ export function useBudget(params?: { month?: number; year?: number }) {
     },
   })
 
+  const createSubscriptionMutation = useMutation({
+    mutationFn: (payload: CreateSubscriptionPayload) =>
+      budgetService.createSubscription(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budget", "subscriptions"] })
+    },
+  })
+
   const toggleSubscriptionMutation = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       budgetService.toggleSubscription(id, is_active),
@@ -58,8 +71,10 @@ export function useBudget(params?: { month?: number; year?: number }) {
     isLoadingEnvelopes: envelopesQuery.isLoading,
     isLoadingSubscriptions: subscriptionsQuery.isLoading,
     isCreating: createEnvelopeMutation.isPending,
+    isCreatingSubscription: createSubscriptionMutation.isPending,
     isToggling: toggleSubscriptionMutation.isPending,
     createEnvelope: createEnvelopeMutation.mutateAsync,
+    createSubscription: createSubscriptionMutation.mutateAsync,
     toggleSubscription: toggleSubscriptionMutation.mutateAsync,
     refetchEnvelopes: envelopesQuery.refetch,
     refetchSubscriptions: subscriptionsQuery.refetch,

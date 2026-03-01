@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { goalsService } from "@/services/goals.service"
 import type { CreateGoal } from "@/types/goals.types"
 
-const GOALS_QUERY_KEY = ["goals"]
+export const GOALS_QUERY_KEY = ["goals"]
 
 export function useGoals() {
   const queryClient = useQueryClient()

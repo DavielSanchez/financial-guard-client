@@ -51,6 +51,16 @@ export interface Subscription {
   updated_at: string
 }
 
+export interface CreateSubscriptionPayload {
+  name: string
+  amount: number
+  currency: string
+  billing_cycle: "monthly" | "yearly" | "weekly"
+  next_bill_date?: string // YYYY-MM-DD
+  color?: string
+  icon?: string
+}
+
 export interface SubscriptionsResponse {
   subscriptions: Subscription[]
   total_monthly_drain?: number

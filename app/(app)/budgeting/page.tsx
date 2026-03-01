@@ -11,6 +11,7 @@ import { CategoryIcon } from "@/components/category-icon"
 import { PrivacyValue } from "@/components/privacy-value"
 import { GlassCard } from "@/components/glass-card"
 import { AddEnvelopePanel } from "@/components/add-envelope-panel"
+import { AddDrainerPanel } from "@/components/add-drainer-panel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useBudget } from "@/hooks/useBudget"
 import { useSettings } from "@/components/settings-provider"
@@ -146,8 +147,10 @@ export default function BudgetingPage() {
     isLoadingEnvelopes,
     isLoadingSubscriptions,
     isCreating,
+    isCreatingSubscription,
     isToggling,
     createEnvelope,
+    createSubscription,
     toggleSubscription,
   } = useBudget()
 
@@ -158,10 +161,72 @@ export default function BudgetingPage() {
   const strokeOffset = circumference * (1 - Math.min(totalPercentage / 100, 1))
   const activeSubs = subscriptions.filter((s: Subscription) => s.is_active)
 
+  const CircularProgressBlock = () => (
+    <div className="flex w-full flex-col items-center gap-3 py-4">
+      <div className="relative flex h-44 w-44 items-center justify-center">
+        <svg
+          className="absolute inset-0 h-full w-full -rotate-90"
+          viewBox="0 0 160 160"
+          style={{ overflow: "visible" }}
+        >
+          <circle
+            cx="80"
+            cy="80"
+            r="70"
+            fill="none"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth="8"
+          />
+          <circle
+            cx="80"
+            cy="80"
+            r="70"
+            fill="none"
+            stroke="url(#ring-gradient)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeOffset}
+            style={{
+              filter:
+                "drop-shadow(0 0 8px #8F00FF) drop-shadow(0 0 20px rgba(143,0,255,0.3))",
+            }}
+          />
+          <defs>
+            <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8F00FF" />
+              <stop offset="100%" stopColor="#00D4FF" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="flex flex-col items-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t("budgeting.totalSpent" as any)}
+          </span>
+          {isLoadingEnvelopes ? (
+            <Skeleton className="mt-1 h-9 w-24" />
+          ) : (
+            <>
+              <PrivacyValue
+                className="font-mono text-3xl font-bold text-foreground"
+                style={{ textShadow: "0 0 20px rgba(143,0,255,0.3)" }}
+              >
+                {formatCurrency(totalSpent)}
+              </PrivacyValue>
+              <span className="mt-0.5 font-mono text-xs text-neon-cyan">
+                {formatCurrency(totalBudget)} {t("budgeting.limit" as any)}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="flex flex-col gap-5 px-4 pt-6 pb-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:px-0">
-      {/* Header - spans full width */}
-      <div className="flex items-center justify-between lg:col-span-12">
+    <div className="flex flex-col items-center gap-5 w-full max-w-5xl mx-auto px-4 pt-6 pb-4">
+      {/* Header */}
+      <div className="flex w-full items-center justify-between">
         <div>
           <h1 className="flex flex-wrap items-baseline gap-2">
             <span className="font-serif text-xl font-bold tracking-wider text-foreground">
@@ -196,8 +261,14 @@ export default function BudgetingPage() {
         </motion.button>
       </div>
 
-      {/* Tab Toggle - Mobile only */}
-      <div className="flex rounded-full p-1 lg:hidden" style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+      {/* Tab Toggle */}
+      <div
+        className="flex w-full rounded-full p-1"
+        style={{
+          backgroundColor: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
         {[
           { key: "envelopes" as const, labelKey: "budgeting.liquidEnvelopes" },
           { key: "drainers" as const, labelKey: "budgeting.drainers" },
@@ -214,13 +285,21 @@ export default function BudgetingPage() {
                   layoutId="budget-tab"
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: tab.key === "envelopes" ? "linear-gradient(135deg, #8F00FF, #6B00CC)" : "linear-gradient(135deg, #FF007F, #CC0066)",
-                    boxShadow: tab.key === "envelopes" ? "0 0 15px rgba(143,0,255,0.3)" : "0 0 15px rgba(255,0,127,0.3)",
+                    background:
+                      tab.key === "envelopes"
+                        ? "linear-gradient(135deg, #8F00FF, #6B00CC)"
+                        : "linear-gradient(135deg, #FF007F, #CC0066)",
+                    boxShadow:
+                      tab.key === "envelopes"
+                        ? "0 0 15px rgba(143,0,255,0.3)"
+                        : "0 0 15px rgba(255,0,127,0.3)",
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <span className={`relative z-10 ${isActive ? "text-white" : "text-muted-foreground"}`}>
+              <span
+                className={`relative z-10 ${isActive ? "text-white" : "text-muted-foreground"}`}
+              >
                 {t(tab.labelKey as any).toUpperCase()}
               </span>
             </button>
@@ -228,79 +307,61 @@ export default function BudgetingPage() {
         })}
       </div>
 
-      {/* Add Envelope Panel */}
-      <div className="lg:col-span-12">
-        <AddEnvelopePanel
-          open={addPanelOpen}
-          onOpenChange={setAddPanelOpen}
-          onSave={async (p) => { await createEnvelope(p) }}
-          isPending={isCreating}
-        />
+      {/* Circular Progress - always visible */}
+      {activeTab === "envelopes" && <CircularProgressBlock />}
+
+      {/* Add Panel */}
+      <div className="w-full">
+        <AnimatePresence mode="wait">
+          {activeTab === "envelopes" ? (
+            <AddEnvelopePanel
+              key="add-envelope"
+              open={addPanelOpen}
+              onOpenChange={setAddPanelOpen}
+              onSave={async (p) => {
+                await createEnvelope(p)
+              }}
+              isPending={isCreating}
+            />
+          ) : (
+            <AddDrainerPanel
+              key="add-drainer"
+              open={addPanelOpen}
+              onOpenChange={setAddPanelOpen}
+              onSave={async (p) => {
+                await createSubscription(p)
+              }}
+              isPending={isCreatingSubscription}
+              t={t as (k: string) => string}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Left Panel - Envelopes (cols 1-8 on desktop) */}
-      <div className={`flex flex-col gap-5 lg:col-span-8 ${activeTab === "drainers" ? "hidden lg:flex" : ""}`}>
-        {/* Circular Progress - Envelopes summary */}
-        <div className="flex flex-col items-center gap-3 py-4">
-          <div className="relative flex h-44 w-44 items-center justify-center">
-            <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 160 160" style={{ overflow: "visible" }}>
-              <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                fill="none"
-                stroke="url(#ring-gradient)"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeOffset}
-                style={{ filter: "drop-shadow(0 0 8px #8F00FF) drop-shadow(0 0 20px rgba(143,0,255,0.3))" }}
-              />
-              <defs>
-                <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#8F00FF" />
-                  <stop offset="100%" stopColor="#00D4FF" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                {t("budgeting.totalSpent" as any)}
-              </span>
-              {isLoadingEnvelopes ? (
-                <Skeleton className="mt-1 h-9 w-24" />
-              ) : (
-                <>
-                  <PrivacyValue
-                    className="font-mono text-3xl font-bold text-foreground"
-                    style={{ textShadow: "0 0 20px rgba(143,0,255,0.3)" }}
-                  >
-                    {formatCurrency(totalSpent)}
-                  </PrivacyValue>
-                  <span className="mt-0.5 font-mono text-xs text-neon-cyan">
-                    {formatCurrency(totalBudget)} {t("budgeting.limit" as any)}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Envelope Cards - Cup filling style */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-2 lg:gap-4">
+      {/* Left Panel - Envelopes (visible only when tab=envelopes) */}
+      <div
+        className={
+          activeTab === "envelopes" ? "flex flex-col gap-5 w-full" : "hidden"
+        }
+      >
+        {/* Envelope Cards */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           {isLoadingEnvelopes ? (
             Array.from({ length: 4 }).map((_, i) => <EnvelopeSkeleton key={i} />)
           ) : envelopes.length === 0 ? (
-            <div className="col-span-2 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 py-12">
-              <p className="text-sm text-muted-foreground">{t("budgeting.liquidEnvelopes" as any)}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Añade tu primer presupuesto</p>
+            <div className="col-span-2 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 py-12 md:col-span-3">
+              <p className="text-sm text-muted-foreground">
+                {t("budgeting.liquidEnvelopes" as any)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("budgeting.addFirstBudget" as any)}
+              </p>
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setAddPanelOpen(true)}
                 className="mt-4 rounded-xl bg-primary/20 px-4 py-2 text-xs font-bold text-primary"
               >
-                + Nuevo presupuesto
+                + {t("budgeting.createEnvelope" as any)}
               </motion.button>
             </div>
           ) : (
@@ -317,33 +378,52 @@ export default function BudgetingPage() {
         </div>
       </div>
 
-      {/* Right Panel - Drainers (cols 9-12 on desktop) */}
+      {/* Right Panel - Drainers (visible only when tab=drainers) */}
       <div
-        className={`flex flex-col gap-3 lg:col-span-4 lg:flex ${
-          activeTab === "envelopes" ? "hidden lg:flex" : ""
-        }`}
+        className={
+          activeTab === "drainers"
+            ? "flex flex-col gap-3 w-full"
+            : "hidden"
+        }
       >
-        <GlassCard className="flex flex-col lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden" glowColor="pink">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("budgeting.monthlyDrain" as any)}
-            </p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t("budgeting.active" as any)}: {activeSubs.length}
-            </p>
+        <GlassCard
+          className="flex flex-col"
+          glowColor="pink"
+        >
+          {/* Summary: MONTHLY DRAIN left, ACTIVE count right */}
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("budgeting.monthlyDrain" as any)}
+              </p>
+              {isLoadingSubscriptions ? (
+                <Skeleton className="mt-1.5 h-9 w-28" />
+              ) : (
+                <PrivacyValue
+                  className="mt-1 font-mono text-2xl font-bold lg:text-3xl"
+                  style={{
+                    color: "#FF007F",
+                    textShadow: "0 0 10px rgba(255,0,127,0.4)",
+                  }}
+                >
+                  {formatCurrency(totalMonthlyDrain)}
+                </PrivacyValue>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t("budgeting.active" as any)}
+              </p>
+              <p
+                className="mt-1 font-mono text-xl font-bold"
+                style={{ color: "#FF8C00" }}
+              >
+                {activeSubs.length}
+              </p>
+            </div>
           </div>
-          {isLoadingSubscriptions ? (
-            <Skeleton className="mt-2 h-10 w-32" />
-          ) : (
-            <PrivacyValue
-              className="font-mono text-2xl font-bold text-neon-pink lg:text-3xl"
-              style={{ textShadow: "0 0 10px rgba(255,0,127,0.4)" }}
-            >
-              {formatCurrency(totalMonthlyDrain)}
-            </PrivacyValue>
-          )}
-
-          <div className="mt-4 flex-1 space-y-2 overflow-y-auto pr-1 lg:max-h-[400px]">
+        </GlassCard>
+        <div className="mt-6 flex-1 space-y-2 overflow-y-auto pr-1 lg:max-h-[340px]">
             {isLoadingSubscriptions ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 rounded-xl p-3">
@@ -357,7 +437,7 @@ export default function BudgetingPage() {
               ))
             ) : subscriptions.length === 0 ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
-                Sin suscripciones registradas
+                {t("budgeting.noSubscriptions" as any)}
               </p>
             ) : (
               subscriptions.map((sub: Subscription) => (
@@ -365,7 +445,9 @@ export default function BudgetingPage() {
                   key={sub.id}
                   sub={sub}
                   formatCurrency={formatCurrency}
-                  onToggle={() => toggleSubscription({ id: sub.id, is_active: !sub.is_active })}
+                  onToggle={() =>
+                    toggleSubscription({ id: sub.id, is_active: !sub.is_active })
+                  }
                   isToggling={isToggling}
                   formatNextBill={(d) => formatNextBill(d, isSpanish ? "es" : "en")}
                   t={t as (k: string) => string}
@@ -373,10 +455,7 @@ export default function BudgetingPage() {
               ))
             )}
           </div>
-        </GlassCard>
       </div>
-
-      <div className="h-4 lg:col-span-12" />
     </div>
   )
 }
@@ -404,17 +483,17 @@ function DrainerRow({
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: isActive ? 1 : 0.5, y: 0 }}
-      className="flex items-center gap-3 rounded-xl p-3"
+      className="flex items-center gap-4 rounded-xl p-4"
       style={{
         backgroundColor: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.06)",
       }}
     >
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-        style={{ backgroundColor: `${color}15` }}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+        style={{ backgroundColor: `${color}20` }}
       >
-        <FontAwesomeIcon icon={faRotate} className="text-sm" style={{ color }} />
+        <FontAwesomeIcon icon={faRotate} className="text-base" style={{ color }} />
       </div>
       <div className="min-w-0 flex-1">
         <p
@@ -424,7 +503,7 @@ function DrainerRow({
         >
           {sub.name}
         </p>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="mt-0.5 text-[10px] text-muted-foreground">
           {t("budgeting.next" as any)}: {formatNextBill(sub.next_bill_date)}
         </p>
       </div>
@@ -435,16 +514,16 @@ function DrainerRow({
         whileTap={{ scale: 0.9 }}
         onClick={onToggle}
         disabled={isToggling}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg disabled:opacity-50"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full disabled:opacity-50"
         style={{
-          backgroundColor: isActive ? "rgba(255,0,127,0.1)" : "rgba(0,255,148,0.1)",
+          backgroundColor: "rgba(255,0,127,0.25)",
+          border: "1px solid rgba(255,0,127,0.3)",
         }}
         aria-label={isActive ? "Desactivar" : "Reactivar"}
       >
         <FontAwesomeIcon
-          icon={isActive ? faXmark : faRotate}
-          className="text-xs"
-          style={{ color: isActive ? "#FF007F" : "#00FF94" }}
+          icon={faXmark}
+          className="text-sm text-white"
         />
       </motion.button>
     </motion.div>

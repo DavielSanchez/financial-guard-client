@@ -108,6 +108,23 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* UX: pointer cursor on interactive elements */
+  button:not(:disabled),
+  a,
+  select,
+  [role="button"],
+  [type="submit"],
+  [type="button"],
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    cursor: text;
+  }
 }
 
 /* Neon Bloom Glow Utilities - uses CSS vars for theming */
@@ -189,6 +206,54 @@
 
 .neon-spinner {
   animation: spin-glow 1s linear infinite, neon-pulse 2s ease-in-out infinite;
+}
+
+/* Active Guard Onboarding - Driver.js popover (military/cyberpunk) */
+.active-guard-popover {
+  background: rgba(5, 5, 5, 0.98) !important;
+  border: 1px solid #00D4FF !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.25), 0 0 40px rgba(0, 212, 255, 0.1) !important;
+  border-radius: 12px !important;
+  font-family: var(--font-mono), monospace !important;
+}
+.active-guard-popover .driver-popover-title {
+  color: #00D4FF !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+}
+.active-guard-popover .driver-popover-description {
+  color: var(--foreground) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+.active-guard-popover .driver-popover-progress-text {
+  color: rgba(0, 212, 255, 0.8) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.1em !important;
+}
+.active-guard-popover .driver-popover-prev-btn,
+.active-guard-popover .driver-popover-next-btn,
+.active-guard-popover .driver-popover-close-btn {
+  font-family: var(--font-mono), monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  border-radius: 8px !important;
+}
+.active-guard-popover .driver-popover-next-btn,
+.active-guard-popover .driver-popover-close-btn.driver-popover-btn-disabled {
+  background: linear-gradient(135deg, #00D4FF 0%, #8F00FF 100%) !important;
+  color: #050505 !important;
+  border: none !important;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.4) !important;
+}
+.active-guard-popover .driver-popover-prev-btn {
+  background: transparent !important;
+  color: #00D4FF !important;
+  border: 1px solid rgba(0, 212, 255, 0.4) !important;
 }
 
 /* Liquid fill animation */

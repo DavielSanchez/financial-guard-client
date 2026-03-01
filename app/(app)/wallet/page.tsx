@@ -16,6 +16,7 @@ import {
   faWallet,
   faShieldHalved,
   faChevronRight,
+  faPen,
 } from "@fortawesome/free-solid-svg-icons"
 import { GlassCard } from "@/components/glass-card"
 import { PrivacyValue } from "@/components/privacy-value"
@@ -23,7 +24,9 @@ import { AddAccountPanel } from "@/components/add-account-panel"
 import { useI18n } from "@/hooks/use-translations"
 import { useAccounts } from "@/hooks/useAccounts"
 import { useGoals } from "@/hooks/useGoals"
+import { useCategories } from "@/hooks/useCategories"
 import { useSettings } from "@/components/settings-provider"
+import { CurrencyInput } from "@/components/currency-input"
 import type { Account } from "@/types/accounts.types"
 
 const TYPE_ICONS: Record<string, typeof faCreditCard> = {
@@ -57,9 +60,20 @@ function accountToCard(acc: Account) {
 export default function WalletPage() {
   const { t } = useI18n()
   const { formatCurrency } = useSettings()
-  const { accounts: rawAccounts, isLoading: loadingAccounts, createAccount, isCreating } = useAccounts()
+  const {
+    accounts: rawAccounts,
+    isLoading: loadingAccounts,
+    createAccount,
+    updateAccount,
+    bridgeTransfer,
+    isCreating,
+    isUpdating,
+    isBridging,
+  } = useAccounts()
   const { goals } = useGoals()
+  const { categories } = useCategories()
   const [addPanelOpen, setAddPanelOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
   const cards = useMemo(() => rawAccounts.filter((a) => !a.is_hidden).map(accountToCard), [rawAccounts])
   const totalBalance = useMemo(() => cards.reduce((s, c) => s + c.balance, 0), [cards])
@@ -81,12 +95,25 @@ export default function WalletPage() {
   const [bridgeMode, setBridgeMode] = useState(false)
   const [bridgeFrom, setBridgeFrom] = useState(0)
   const [bridgeTo, setBridgeTo] = useState(1)
+  const [bridgeAmount, setBridgeAmount] = useState(0)
+  const [bridgeCategory, setBridgeCategory] = useState<string>("")
   const [vaultRevealed, setVaultRevealed] = useState<string[]>([])
+
+  const expenseCategories = useMemo(
+    () => categories.filter((c) => !c.type || c.type === "expense"),
+    [categories]
+  )
 
   useEffect(() => {
     if (cards.length > 0 && bridgeFrom >= cards.length) setBridgeFrom(0)
     if (cards.length > 0 && bridgeTo >= cards.length) setBridgeTo(Math.min(1, cards.length - 1))
   }, [cards.length, bridgeFrom, bridgeTo])
+
+  useEffect(() => {
+    if (expenseCategories.length > 0 && !bridgeCategory) {
+      setBridgeCategory(expenseCategories[0].id)
+    }
+  }, [expenseCategories, bridgeCategory])
 
   const handleStep = (dir: number) => {
     const nextIndex = currentCard + dir
@@ -96,8 +123,31 @@ export default function WalletPage() {
     }
   }
 
-  const openAddAccount = () => setAddPanelOpen(true)
-  const toggleAddPanel = () => setAddPanelOpen((p) => !p)
+  const openAddAccount = () => {
+    setEditingAccount(null)
+    setBridgeMode(false)
+    setAddPanelOpen(true)
+  }
+  const openEditAccount = (account: Account) => {
+    setEditingAccount(account)
+    setBridgeMode(false)
+    setAddPanelOpen(true)
+  }
+  const toggleAddPanel = () => {
+    setAddPanelOpen((p) => {
+      if (!p) {
+        setEditingAccount(null)
+        setBridgeMode(false)
+      }
+      return !p
+    })
+  }
+  const openBridgeMode = () => {
+    setAddPanelOpen(false)
+    setEditingAccount(null)
+    setBridgeMode(true)
+  }
+  const closeBridgeMode = () => setBridgeMode(false)
 
   const variants = {
     enter: (dir: number) => ({
@@ -127,9 +177,10 @@ export default function WalletPage() {
           <div className="flex gap-2">
             {cards.length > 0 && (
               <motion.button
+                type="button"
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setBridgeMode(!bridgeMode)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+                onClick={() => (bridgeMode ? closeBridgeMode() : openBridgeMode())}
+                className={`cursor-pointer flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
                   bridgeMode
                     ? "bg-primary/20 text-primary ring-1 ring-primary/40"
                     : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
@@ -142,9 +193,13 @@ export default function WalletPage() {
               </motion.button>
             )}
             <motion.button
+              type="button"
               whileTap={{ scale: 0.95 }}
-              onClick={toggleAddPanel}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl text-primary-foreground shadow-[0_0_20px_var(--primary)]/30 transition-shadow hover:shadow-[0_0_24px_var(--primary)]/40 ${
+              onClick={() => {
+                if (bridgeMode) closeBridgeMode()
+                toggleAddPanel()
+              }}
+              className={`cursor-pointer flex h-11 w-11 items-center justify-center rounded-xl text-primary-foreground shadow-[0_0_20px_var(--primary)]/30 transition-shadow hover:shadow-[0_0_24px_var(--primary)]/40 ${
                 addPanelOpen ? "bg-primary/80" : "bg-primary"
               }`}
             >
@@ -158,9 +213,16 @@ export default function WalletPage() {
         {/* Panel Crear Cuenta (despliega desde abajo como goals) */}
         <AddAccountPanel
           open={addPanelOpen}
-          onOpenChange={setAddPanelOpen}
-          onSave={async (p) => { await createAccount(p) }}
-          isPending={isCreating}
+          onOpenChange={(open) => {
+            setAddPanelOpen(open)
+            if (!open) setEditingAccount(null)
+          }}
+          onSave={async (p, accountId) => {
+            if (accountId) await updateAccount(accountId, p)
+            else await createAccount(p)
+          }}
+          isPending={isCreating || isUpdating}
+          account={editingAccount}
         />
 
         {/* Balance total (solo si hay cuentas) */}
@@ -182,7 +244,7 @@ export default function WalletPage() {
         {/* Carrusel de tarjetas */}
         <section className="space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {t("wallet.title" as any)} · {cards.length + 1} {cards.length === 0 ? "tarjeta" : "tarjetas"}
+            {t("wallet.title" as any)} · {cards.length} {cards.length === 0 ? `${t("settings.account" as any)}` : `${t("settings.accounts" as any)}`}
           </h2>
           <div className="relative min-h-[240px]">
             <AnimatePresence mode="popLayout" initial={false}>
@@ -280,8 +342,22 @@ export default function WalletPage() {
                                       {cards[currentCard].name}
                                     </p>
                                   </div>
-                                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm ring-1 ring-white/10">
-                                    <FontAwesomeIcon icon={cards[currentCard].icon} className="text-white" />
+                                  <div className="flex items-center gap-2">
+                                    <motion.button
+                                      type="button"
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        const acc = rawAccounts.find((a) => a.id === cards[currentCard].id)
+                                        if (acc) openEditAccount(acc)
+                                      }}
+                                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 transition-colors hover:bg-white/20"
+                                    >
+                                      <FontAwesomeIcon icon={faPen} className="text-sm text-white" />
+                                    </motion.button>
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm ring-1 ring-white/10">
+                                      <FontAwesomeIcon icon={cards[currentCard].icon} className="text-white" />
+                                    </div>
                                   </div>
                                 </div>
                                 <div>
@@ -368,18 +444,65 @@ export default function WalletPage() {
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t("wallet.bridge.amount" as any)}
                     </p>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      className="mt-2 w-full bg-transparent text-center font-mono text-3xl font-black text-foreground outline-none placeholder:text-muted-foreground/50"
-                    />
+                    <div className="mt-2 w-full">
+                      <CurrencyInput
+                        value={bridgeAmount}
+                        onChange={setBridgeAmount}
+                        placeholder="0.00"
+                        className="justify-center"
+                        inputClassName="text-center text-3xl font-black placeholder:text-muted-foreground/50"
+                      />
+                    </div>
                   </GlassCard>
+                  {expenseCategories.length > 0 && (
+                    <GlassCard className="w-full p-4" glowColor="purple">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {t("wallet.bridge.category" as any)}
+                      </p>
+                      <select
+                        value={bridgeCategory}
+                        onChange={(e) => setBridgeCategory(e.target.value)}
+                        className="mt-2 w-full cursor-pointer bg-transparent text-sm font-bold text-foreground outline-none"
+                      >
+                        <option value="">{t("wallet.bridge.selectCategory" as any)}</option>
+                        {expenseCategories.map((c) => (
+                          <option key={c.id} value={c.id} className="bg-background text-foreground">
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </GlassCard>
+                  )}
                   <motion.button
+                    type="button"
                     whileTap={{ scale: 0.98 }}
-                    className="w-full rounded-xl bg-primary py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground"
+                    disabled={
+                      bridgeAmount <= 0 ||
+                      !bridgeCategory ||
+                      bridgeFrom === bridgeTo ||
+                      expenseCategories.length === 0 ||
+                      isBridging
+                    }
+                    onClick={async () => {
+                      if (bridgeAmount <= 0 || !bridgeCategory || bridgeFrom === bridgeTo) return
+                      const fromId = cards[bridgeFrom]?.id
+                      const toId = cards[bridgeTo]?.id
+                      if (!fromId || !toId) return
+                      try {
+                        await bridgeTransfer({
+                          from_account_id: fromId,
+                          to_account_id: toId,
+                          amount: bridgeAmount,
+                          category_id: bridgeCategory,
+                        })
+                        setBridgeAmount(0)
+                      } catch {
+                        // Error could be shown via toast
+                      }
+                    }}
+                    className="cursor-pointer w-full rounded-xl bg-primary py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {t("wallet.bridge.execute" as any)}
+                    {isBridging ? "…" : t("wallet.bridge.execute" as any)}
                   </motion.button>
                 </motion.div>
               )}

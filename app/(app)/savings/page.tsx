@@ -18,6 +18,7 @@ import {
 import { PrivacyValue } from "@/components/privacy-value"
 import { useGoals } from "@/hooks/useGoals"
 import { useSettings } from "@/components/settings-provider"
+import { CurrencyInput } from "@/components/currency-input"
 
 type GoalType = "open" | "progression"
 
@@ -27,6 +28,7 @@ interface SavingsGoal {
   type: GoalType
   target: number
   saved: number
+  currency?: string
   createdAt: string
   startAmount?: number
   increment?: number
@@ -59,6 +61,7 @@ function apiGoalToSavingsGoal(g: import("@/types/goals.types").Goal): SavingsGoa
     type: isProgression ? "progression" : "open",
     target: g.target_amount ?? 0,
     saved: Number(saved) || 0,
+    currency: g.currency ?? "USD",
     createdAt: g.created_at?.split("T")[0] ?? "",
     startAmount: g.start_amount ?? 0,
     increment: g.increment_amount ?? 0,
@@ -137,6 +140,7 @@ function PiggyBank({
   onDeposit,
   onDelete,
   t,
+  formatCurrency,
   isContributing,
   isDeleting,
 }: {
@@ -145,6 +149,7 @@ function PiggyBank({
   onDeposit: (id: string, amount: number) => void
   onDelete: (id: string) => void
   t: (key: string, params?: Record<string, string | number>) => string
+  formatCurrency: (amount: number, currency?: string) => string
   isContributing: boolean
   isDeleting: boolean
 }) {
@@ -261,7 +266,7 @@ function PiggyBank({
               <p className="text-[10px] text-muted-foreground">
                 {goal.type === "open"
                   ? t("goals.openGoal")
-                  : `${t("goals.dailyChallenge")} \u00B7 +$${goal.increment}/day`}
+                  : `${t("goals.dailyChallenge")} · +${formatCurrency(goal.increment ?? 0, goal.currency)}/${t("time.units.day" as any)}`}
               </p>
             </div>
           </div>
@@ -347,10 +352,10 @@ function PiggyBank({
                   : "0 0 15px rgba(143,0,255,0.3)",
               }}
             >
-              ${(goal.saved ?? 0).toLocaleString()}
+              {formatCurrency(goal.saved ?? 0, goal.currency)}
             </PrivacyValue>
             <span className="font-mono text-xs text-muted-foreground">
-              / ${effectiveTarget.toLocaleString()}
+              / {formatCurrency(effectiveTarget, goal.currency)}
             </span>
           </div>
           <div
@@ -444,7 +449,7 @@ function PiggyBank({
               >
                 <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
                 <span>
-                  {t("goals.checkIn" as any, { amount: todayAmount })}
+                  {t("goals.checkIn" as any, { amount: formatCurrency(todayAmount, goal.currency) })}
                 </span>
               </motion.button>
             ) : (
@@ -476,7 +481,9 @@ function PiggyBank({
                       border: "1px solid rgba(255,255,255,0.1)",
                     }}
                   >
-                    <span className="font-mono text-sm text-neon-purple">$</span>
+                    <span className="font-mono text-sm text-neon-purple">
+                      {goal.currency === "DOP" ? "RD$" : goal.currency === "EUR" ? "€" : "$"}
+                    </span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -556,7 +563,7 @@ export default function SavingsGoalsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [newType, setNewType] = useState<GoalType>("open")
-  const [newTarget, setNewTarget] = useState("")
+  const [newTarget, setNewTarget] = useState(0)
   const [newStartAmount, setNewStartAmount] = useState("1")
   const [newIncrement, setNewIncrement] = useState("1")
   const [newChallengeDays, setNewChallengeDays] = useState("30")
@@ -628,7 +635,7 @@ export default function SavingsGoalsPage() {
     const start = parseFloat(newStartAmount) || 1
     const inc = parseFloat(newIncrement) || 1
     const days = parseInt(newChallengeDays) || 30
-    const targetVal = newType === "open" ? parseFloat(newTarget) || 1000 : progressionTotalForDays(start, inc, days)
+    const targetVal = newType === "open" ? (newTarget || 1000) : progressionTotalForDays(start, inc, days)
 
     const deadline = new Date()
     if (newType === "progression") {
@@ -655,7 +662,7 @@ export default function SavingsGoalsPage() {
         notify_on_risk: true,
       })
       setNewName("")
-      setNewTarget("")
+      setNewTarget(0)
       setNewStartAmount("1")
       setNewIncrement("1")
       setNewChallengeDays("30")
@@ -831,7 +838,7 @@ export default function SavingsGoalsPage() {
                     }}
                   >
                     <span className="font-mono text-sm text-neon-purple">$</span>
-                    <input
+                    {/* <input
                       type="text"
                       inputMode="decimal"
                       value={newTarget}
@@ -840,6 +847,12 @@ export default function SavingsGoalsPage() {
                       }
                       placeholder="5000"
                       className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder-muted-foreground/50"
+                    /> */}
+                    <CurrencyInput
+                      value={newTarget}
+                      onChange={setNewTarget}
+                      placeholder="5000"
+                      inputClassName="text-sm placeholder:text-muted-foreground/50"
                     />
                   </div>
                 </div>
@@ -862,17 +875,13 @@ export default function SavingsGoalsPage() {
                         }}
                       >
                         <span className="font-mono text-sm text-neon-cyan">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={newStartAmount}
-                          onChange={(e) =>
-                            setNewStartAmount(
-                              e.target.value.replace(/[^0-9.]/g, "")
-                            )
-                          }
-                          placeholder="1"
-                          className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder-muted-foreground/50"
+                        <CurrencyInput
+                          value={Number(newStartAmount) || 0}
+                          onChange={(value) => setNewStartAmount(String(value))}
+                          placeholder="0.00"
+                          inputClassName="text-sm placeholder:text-muted-foreground/40"
+                          min={0}
+                          max={10000000}
                         />
                       </div>
                     </div>
@@ -892,17 +901,13 @@ export default function SavingsGoalsPage() {
                         <span className="font-mono text-sm text-neon-green">
                           +$
                         </span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={newIncrement}
-                          onChange={(e) =>
-                            setNewIncrement(
-                              e.target.value.replace(/[^0-9.]/g, "")
-                            )
-                          }
-                          placeholder="1"
-                          className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder-muted-foreground/50"
+                        <CurrencyInput
+                          value={Number(newIncrement) || 0}
+                          onChange={(value) => setNewIncrement(String(value))}
+                          placeholder="0.00"
+                          inputClassName="text-sm placeholder:text-muted-foreground/40"
+                          min={0}
+                          max={10000000}
                         />
                       </div>
                     </div>
@@ -929,6 +934,7 @@ export default function SavingsGoalsPage() {
                             e.target.value.replace(/[^0-9]/g, "")
                           )
                         }
+                        maxLength={4}
                         placeholder="30"
                         className="w-full bg-transparent font-mono text-sm text-foreground outline-none placeholder-muted-foreground/50"
                       />
@@ -958,7 +964,7 @@ export default function SavingsGoalsPage() {
                             D{i + 1}
                           </span>
                           <span className="font-mono text-[10px] font-bold text-neon-cyan">
-                            ${amt}
+                            {formatCurrency(amt, currency)}
                           </span>
                         </div>
                       ))}
@@ -969,7 +975,7 @@ export default function SavingsGoalsPage() {
                       </div>
                     </div>
                     <p className="mt-2 font-mono text-xs font-bold text-neon-cyan">
-                      {t("goals.totalInDays" as any, { days: newChallengeDays || "30" })}: ${projectedTotal.toLocaleString()}
+                      {t("goals.totalInDays" as any, { days: newChallengeDays || "30" })}: {formatCurrency(projectedTotal, currency)}
                     </p>
                   </div>
                 </>
@@ -1003,6 +1009,7 @@ export default function SavingsGoalsPage() {
               onDeposit={handleDeposit}
               onDelete={handleDelete}
               t={t as (key: string, params?: Record<string, string | number>) => string}
+              formatCurrency={formatCurrency}
               isContributing={isContributing}
               isDeleting={isDeleting}
             />

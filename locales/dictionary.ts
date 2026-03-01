@@ -62,6 +62,7 @@ export const en = {
     appearance: "Appearance",
     accessibility: "Accessibility",
     account: "Account",
+    accounts: "Accounts",
     
     displayName: "Display Name",
     email: "Email Address",
@@ -129,6 +130,7 @@ export const en = {
     add: "Add new",
     update: "Update",
     loading: "Loading...",
+    saving: "Saving...",
     error: "Error",
     success: "Success",
     confirmation: "Are you sure?",
@@ -330,6 +332,19 @@ export const en = {
       foodDining: "Food & Dining",
       health: "Health",
     },
+    newEnvelope: "New budget",
+    newDrainer: "New drainer",
+    drainerName: "Name",
+    drainerAmount: "Amount",
+    drainerBillingCycle: "Billing cycle",
+    drainerNextBill: "Next bill date",
+    billingMonthly: "Monthly",
+    billingYearly: "Yearly",
+    billingWeekly: "Weekly",
+    createEnvelope: "Create budget",
+    createDrainer: "Add drainer",
+    noSubscriptions: "No subscriptions registered",
+    addFirstBudget: "Add your first budget",
   },
 
   // ===================== GOALS & SAVINGS =====================
@@ -408,6 +423,23 @@ export const en = {
     }
   },
 
+  savings: {
+    createFirstPiggy: "Create my first piggy",
+    goalDone: "Goal completed! Rest, see you tomorrow.",
+    morningPiggy: "Good morning! Your piggy is waiting for its coffee.",
+    afternoonPiggy: "Your piggy is waiting for today's contribution.",
+    eveningPiggy: "Don't forget to feed your piggy today.",
+    dontSleepStreak: "Don't go to sleep without protecting your {count}-day streak.",
+    lastChanceToday: "Last chance of the day!",
+    streakProtected: "Your streak is protected for today.",
+    igniteStreak: "Ignite your streak!",
+    legendaryStreak: "{count} day streak",
+    streakFreeze: "Streak freeze available",
+    streakMaintained: "Streak maintained! 🔥",
+    openGoalReminder: "{days} days left to reach your goal",
+    contributeWhenReady: "Contribute whenever you're ready",
+  },
+
   // ===================== WALLET =====================
   wallet: {
     title: "Wallet",
@@ -418,6 +450,10 @@ export const en = {
       accounts: "Accounts",
       addAccount: "Add Account",
     },
+
+    editAccount: "Edit Account",
+    newAccount: "New Account",
+    createAccount: "Create Account",
 
     cards: {
       mainChecking: "Main Checking",
@@ -443,6 +479,8 @@ export const en = {
       execute: "Execute Bridge",
       from: "From",
       to: "To",
+      category: "Category",
+      selectCategory: "Select category",
     },
 
     liquidAssets: "Liquid Assets",
@@ -512,6 +550,61 @@ export const en = {
     logExpense: "Log Expense",
   },
 
+  // ===================== ONBOARDING =====================
+  onboarding: {
+    languageModal: {
+      title: "SELECT LANGUAGE",
+      subtitle: "Configure your command interface",
+      startProtocol: "START PROTOCOL",
+      skip: "Skip introduction",
+    },
+    steps: {
+      welcome: {
+        title: "WELCOME, GUARDIAN",
+        description: "This is your command center. Follow the protocol to master cash flow.",
+      },
+      balanceChart: {
+        title: "BALANCE MODULE",
+        description: "Primary monitor. Here you visualize your capital evolution by selected period. Switch between Balance, Income and Expenses using the top tabs.",
+      },
+      balanceTabs: {
+        title: "CASH FLOW: INCOME vs EXPENSE",
+        description: "INCOME = money in. EXPENSE = money out. This distinction is critical for operational control. Toggle tabs to view each metric.",
+      },
+      budgetWidgets: {
+        title: "BUDGET & SUBSCRIPTIONS",
+        description: "Left: available balance from envelopes. Right: next subscription due. Manage budgets in the Budget tab.",
+      },
+      recentTransactions: {
+        title: "MOVEMENT LOG",
+        description: "Recent operations log. Each movement shows type (Income/Expense), account, category and amount. Keep this log updated.",
+      },
+      fabTransaction: {
+        title: "TACTICAL ACTION: RECORD MOVEMENT",
+        description: "The center button (plus emblem) opens the new transaction form. It is your main entry point for recording income and expenses. Press to continue.",
+      },
+      txTypeToggle: {
+        title: "MOVEMENT CLASSIFICATION",
+        description: "Before recording: define if it is INCOME (money in) or EXPENSE (money out). The toggle switches categories and labels. Green = income, purple = expense.",
+      },
+      complete: {
+        title: "PROTOCOL COMPLETE",
+        description: "Command center active. You are ready to operate. Record your first transaction or explore the menu. The guardian who records, controls.",
+      },
+    },
+    driver: {
+      next: "NEXT",
+      prev: "BACK",
+      done: "COMPLETE PROTOCOL",
+      close: "Close",
+    },
+    settings: {
+      sectionTitle: "Protocol",
+      repeatProtocol: "REPEAT INITIATION PROTOCOL",
+      repeatConfirm: "Restart the onboarding tour on the Dashboard?",
+    },
+  },
+
   // ===================== ADD CATEGORY =====================
   addCategory: {
     title: "New {type} Category",
@@ -528,6 +621,10 @@ export const en = {
   aiCoach: {
     title: "AI Coach",
     subtitle: "Your personal financial advisor",
+    comingSoon: "Coming Soon",
+    doNotTrespass: "DO NOT TRESPASS",
+    inviteTitle: "Try the AI Coach",
+    inviteSubtitle: "Get personalized financial advice and answers about your finances",
     
     status: {
       online: "Online",
@@ -615,6 +712,7 @@ export const es = {
     appearance: "Apariencia",
     accessibility: "Accesibilidad",
     account: "Cuenta",
+    accounts: "Cuentas",
     
     displayName: "Nombre visible",
     email: "Correo electrónico",
@@ -682,6 +780,7 @@ export const es = {
     add: "Añadir nueva",
     update: "Actualizar",
     loading: "Cargando...",
+    saving: "Guardando...",
     error: "Error",
     success: "Éxito",
     confirmation: "¿Estás seguro?",
@@ -842,6 +941,19 @@ export const es = {
       foodDining: "Comida y Restaurantes",
       health: "Salud",
     },
+    newEnvelope: "Nuevo presupuesto",
+    newDrainer: "Nuevo drenador",
+    drainerName: "Nombre",
+    drainerAmount: "Monto",
+    drainerBillingCycle: "Ciclo de facturación",
+    drainerNextBill: "Próxima factura",
+    billingMonthly: "Mensual",
+    billingYearly: "Anual",
+    billingWeekly: "Semanal",
+    createEnvelope: "Crear presupuesto",
+    createDrainer: "Agregar drenador",
+    noSubscriptions: "Sin suscripciones registradas",
+    addFirstBudget: "Añade tu primer presupuesto",
   },
 
   // ===================== FINANCE & BANKING =====================
@@ -961,6 +1073,23 @@ export const es = {
     }
   },
 
+  savings: {
+    createFirstPiggy: "Crear mi primera alcancía",
+    goalDone: "¡Objetivo cumplido! Descansa, nos vemos mañana.",
+    morningPiggy: "¡Buenos días! Tu alcancía está esperando su café.",
+    afternoonPiggy: "Tu alcancía está esperando la contribución de hoy.",
+    eveningPiggy: "No olvides alimentar tu alcancía hoy.",
+    dontSleepStreak: "No te vayas a dormir sin proteger tu racha de {count} días.",
+    lastChanceToday: "¡Última oportunidad del día!",
+    streakProtected: "Tu racha está protegida por hoy.",
+    igniteStreak: "¡Enciende tu racha!",
+    legendaryStreak: "racha de {count} días",
+    streakFreeze: "Congelador de racha disponible",
+    streakMaintained: "¡Racha mantenida! 🔥",
+    openGoalReminder: "{days} días para alcanzar tu meta",
+    contributeWhenReady: "Aporta cuando quieras",
+  },
+
   // ===================== WALLET =====================
   wallet: {
     title: "Billetera",
@@ -971,6 +1100,10 @@ export const es = {
       accounts: "Cuentas",
       addAccount: "Agregar Cuenta",
     },
+
+    editAccount: "Editar Cuenta",
+    newAccount: "Nueva Cuenta",
+    createAccount: "Crear Cuenta",
 
     cards: {
       mainChecking: "Cuenta Corriente Principal",
@@ -996,6 +1129,8 @@ export const es = {
       execute: "Ejecutar Puente",
       from: "Desde Cuenta",
       to: "Hacia Cuenta",
+      category: "Categoría",
+      selectCategory: "Seleccionar categoría",
     },
 
     liquidAssets: "Activos Líquidos",
@@ -1077,10 +1212,69 @@ export const es = {
     placeholder: "Ejem: Gimnasio, Freelance...",
   },
 
+  // ===================== ONBOARDING =====================
+  onboarding: {
+    languageModal: {
+      title: "SELECCIONAR IDIOMA",
+      subtitle: "Configura la interfaz de tu centro de comando",
+      startProtocol: "INICIAR PROTOCOLO",
+      skip: "Saltar introducción",
+    },
+    steps: {
+      welcome: {
+        title: "BIENVENIDO, GUARDIÁN",
+        description: "Este es tu centro de comando. Sigue el protocolo para dominar el flujo de caja.",
+      },
+      balanceChart: {
+        title: "MÓDULO DE BALANCE",
+        description: "Monitor principal. Aquí visualizas la evolución de tu capital según el período seleccionado. Cambia entre Balance, Ingresos y Gastos usando las pestañas superiores.",
+      },
+      balanceTabs: {
+        title: "FLUJO DE CAJA: INGRESOS vs GASTOS",
+        description: "INGRESO = dinero que entra. GASTO = dinero que sale. Esta distinción es crítica para el control operativo. Alterna las pestañas para ver cada métrica.",
+      },
+      budgetWidgets: {
+        title: "PRESUPUESTO Y SUSCRIPCIONES",
+        description: "Izquierda: saldo disponible según tus sobres. Derecha: próxima suscripción a vencer. Gestiona presupuestos en la pestaña Presupuesto del menú.",
+      },
+      recentTransactions: {
+        title: "REGISTRO DE MOVIMIENTOS",
+        description: "Historial de operaciones recientes. Cada movimiento indica tipo (Ingreso/Gasto), cuenta, categoría y monto. Mantén este registro actualizado.",
+      },
+      fabTransaction: {
+        title: "ACCIÓN TÁCTICA: REGISTRAR MOVIMIENTO",
+        description: "El botón central (emblema +) abre el formulario de nueva transacción. Es tu principal punto de entrada para capturar ingresos y gastos. Pulsa para continuar.",
+      },
+      txTypeToggle: {
+        title: "CLASIFICACIÓN DE MOVIMIENTO",
+        description: "Antes de registrar: define si es INGRESO (dinero que entra) o GASTO (dinero que sale). El toggle cambia categorías y etiquetas. Usa verde para ingreso, púrpura para gasto.",
+      },
+      complete: {
+        title: "PROTOCOLO COMPLETADO",
+        description: "Centro de comando activado. Estás listo para operar. Registra tu primera transacción o explora el menú. El guardián que registra, controla.",
+      },
+    },
+    driver: {
+      next: "SIGUIENTE",
+      prev: "ANTERIOR",
+      done: "FINALIZAR PROTOCOLO",
+      close: "Cerrar",
+    },
+    settings: {
+      sectionTitle: "Protocolo",
+      repeatProtocol: "REPETIR PROTOCOLO DE INICIACIÓN",
+      repeatConfirm: "¿Reiniciar el tour de bienvenida en el Dashboard?",
+    },
+  },
+
   // ===================== AI COACH =====================
   aiCoach: {
     title: "Entrenador IA",
     subtitle: "Tu asesor financiero personal",
+    comingSoon: "Próximamente",
+    doNotTrespass: "PROHIBIDO EL PASO",
+    inviteTitle: "Prueba el bot de IA",
+    inviteSubtitle: "Obtén consejos financieros personalizados y respuestas sobre tus finanzas",
     
     status: {
       online: "En línea",

@@ -31,7 +31,7 @@ interface SettingsContextValue extends Settings {
   setLanguage: (l: LanguageCode) => void
   setCurrency: (c: CurrencyCode) => void
   setUserName: (n: string) => void
-  formatCurrency: (amount: number) => string
+  formatCurrency: (amount: number, currencyOverride?: string) => string
   t: (key: string) => string
 }
 
@@ -241,11 +241,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setCurrency = (currency: CurrencyCode) => updateAndSync({ currency })
   const setUserName = (userName: string) => updateAndSync({ userName })
 
-  const formatCurrency = useCallback((amount: number) => {
+  const formatCurrency = useCallback((amount: number, currencyOverride?: string) => {
     const locale = settings.language === "es" ? "es-DO" : "en-US"
+    const currency = currencyOverride && ["USD", "EUR", "DOP", "MXN"].includes(currencyOverride)
+      ? currencyOverride
+      : settings.currency
     return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: settings.currency,
+      currency,
     }).format(amount)
   }, [settings.language, settings.currency])
 

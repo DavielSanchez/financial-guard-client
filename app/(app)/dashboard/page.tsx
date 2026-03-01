@@ -10,9 +10,9 @@ import {
   faArrowTrendDown,
   faBolt,
   faClock,
-  faFire,
-  faChevronRight,
   faGear,
+  faRobot,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons"
 import { useState, useMemo } from "react"
 import { usePrivacy } from "@/components/providers"
@@ -26,6 +26,11 @@ import { useAccounts } from "@/hooks/useAccounts"
 import { useRecentTransactions } from "@/hooks/useRecentTransactions"
 import { CategoryIcon } from "@/components/category-icon"
 import { hexToRgba } from "@/lib/hexToRgba "
+import { SavingsContainer } from "@/components/savings/SavingsContainer"
+import { useBudget } from "@/hooks/useBudget"
+import { LanguageModal } from "@/components/onboarding/LanguageModal"
+import { useOnboarding } from "@/hooks/useOnboarding"
+import { useOnboardingContext } from "@/components/onboarding/OnboardingProvider"
 
 type TimePeriod = "Day" | "Week" | "Month" | "Year"
 type BalanceTab = "BALANCE" | "INCOME" | "EXPENSE"
@@ -52,6 +57,9 @@ function useDashboardData(period: TimePeriod) {
 export default function DashboardPage() {
   const { t } = useI18n()
   const { privacyMode, togglePrivacy } = usePrivacy()
+  const { shouldShowOnboarding, skipOnboarding, forceStart } = useOnboarding()
+  const ctx = useOnboardingContext()
+  const showLanguageModal = shouldShowOnboarding && !forceStart && !ctx?.languageModalConfirmed
   const { formatCurrency } = useSettings()
   const [period, setPeriod] = useState<TimePeriod>("Day")
   const [balanceTab, setBalanceTab] = useState<BalanceTab>("BALANCE")
@@ -65,6 +73,36 @@ export default function DashboardPage() {
     recent,
     isLoadingRecent,
   } = useDashboardData(period)
+
+  const {
+    envelopes,
+    subscriptions,
+    totalBudget,
+    totalSpent,
+    isLoadingEnvelopes,
+    isLoadingSubscriptions,
+  } = useBudget()
+
+  const budgetRemaining = totalBudget - totalSpent
+  const budgetUsedPct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
+
+  const nextSubscription = useMemo(() => {
+    const active = subscriptions.filter((s) => s.is_active)
+    if (active.length === 0) return null
+    return active.sort(
+      (a, b) =>
+        new Date(a.next_bill_date).getTime() - new Date(b.next_bill_date).getTime()
+    )[0]
+  }, [subscriptions])
+
+  const daysUntilNextBill = useMemo(() => {
+    if (!nextSubscription) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const next = new Date(nextSubscription.next_bill_date + "T12:00:00")
+    next.setHours(0, 0, 0, 0)
+    return Math.ceil((next.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+  }, [nextSubscription])
 
   const displayValue = useMemo(() => {
     if (!summary) return 0
@@ -180,7 +218,7 @@ export default function DashboardPage() {
   )
 
   const renderPeriodSelector = () => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" data-tour="period-selector">
       {periodKeys.map((id, index) => {
         const isActive = period === id
         return (
@@ -215,8 +253,9 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`rounded-2xl border border-glass-border bg-glass-bg p-5 backdrop-blur-3xl ${className}`}
+      data-tour="balance-chart"
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3" data-tour="balance-tabs">
         <div className="flex gap-4">
           {tabKeys.map((tab, index) => {
             const isActive = balanceTab === tab
@@ -300,7 +339,7 @@ export default function DashboardPage() {
   )
 
   const renderRecentTable = () => (
-    <div className="rounded-2xl border border-glass-border bg-glass-bg p-4">
+    <div className="rounded-2xl border border-glass-border bg-glass-bg p-4" data-tour="recent-transactions">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-serif text-base font-bold italic tracking-wider text-foreground">
           {t("dashboard.recentActivity" as any)}
@@ -371,16 +410,16 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 pr-4 text-xs text-muted-foreground">
+                    <td className="py-3 pr-4 truncate text-xs text-muted-foreground">
                       {tx.accounts?.name}
                     </td>
-                    <td className="py-3 pr-4 text-xs text-muted-foreground">
+                    <td className="py-3 pr-4 truncate text-xs text-muted-foreground">
                       {tx.categories?.name}
                     </td>
                     <td className="py-3 pr-4 truncate text-xs text-muted-foreground">
                       {formattedDate}
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 truncate text-right">
                       <PrivacyValue
                         className={`font-mono text-sm font-bold ${
                           isIncome ? "text-neon-green" : "text-foreground"
@@ -399,112 +438,138 @@ export default function DashboardPage() {
     </div>
   )
 
-  const renderInfoRowMobile = () => (
-    <div className="grid grid-cols-2 gap-3">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-2xl p-4"
-        style={{
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(25px)",
-          border: "1px solid var(--glass-border)",
-        }}
-      >
-        <FontAwesomeIcon
-          icon={faBolt}
-          className="mb-3 text-xs text-muted-foreground"
+  const renderInfoRowMobile = () => {
+    const circumference = 2 * Math.PI * 45
+    const strokeOffset = circumference * (1 - Math.min(budgetUsedPct / 100, 1))
+
+    return (
+      <div className="grid grid-cols-2 gap-3" data-tour="budget-widgets">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl p-4"
           style={{
-            filter: "drop-shadow(0 0 4px rgba(var(--neon-4-rgb),0.5))",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(25px)",
+            border: "1px solid var(--glass-border)",
           }}
-        />
-        <div className="flex items-center justify-center">
-          <div className="relative flex h-30 w-30 items-center justify-center">
-            <svg
-              className="absolute inset-0 h-full w-full -rotate-90"
-              viewBox="0 0 100 100"
-              style={{ overflow: "visible" }}
-            >
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="var(--muted)"
-                strokeWidth="5"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="var(--neon-4)"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 45}`}
-                strokeDashoffset={`${2 * Math.PI * 45 * 0.25}`}
-                style={{
-                  filter: "drop-shadow(0 0 8px var(--neon-4))",
-                  transition: "stroke-dashoffset 0.5s ease",
-                }}
-              />
-            </svg>
-            <div className="flex flex-col items-center">
-              <PrivacyValue
-                className="font-mono text-lg font-bold text-neon-green"
-                style={{
-                  textShadow: "0 0 10px rgba(var(--neon-4-rgb),0.4)",
-                }}
+        >
+          <FontAwesomeIcon
+            icon={faBolt}
+            className="mb-3 text-xs text-muted-foreground"
+            style={{
+              filter: "drop-shadow(0 0 4px rgba(var(--neon-4-rgb),0.5))",
+            }}
+          />
+          <div className="flex items-center justify-center">
+            <div className="relative flex h-30 w-30 items-center justify-center">
+              <svg
+                className="absolute inset-0 h-full w-full -rotate-90"
+                viewBox="0 0 100 100"
+                style={{ overflow: "visible" }}
               >
-                {formatCurrency(120)}
-              </PrivacyValue>
-              <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
-                {t("dashboard.leftToday" as any)}
-              </span>
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="var(--muted)"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="var(--neon-4)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeOffset}
+                  style={{
+                    filter: "drop-shadow(0 0 8px var(--neon-4))",
+                    transition: "stroke-dashoffset 0.5s ease",
+                  }}
+                />
+              </svg>
+              <div className="flex flex-col items-center">
+                {isLoadingEnvelopes ? (
+                  <span className="font-mono text-lg font-bold text-muted-foreground">---</span>
+                ) : (
+                  <PrivacyValue
+                    className="font-mono text-lg font-bold text-neon-green"
+                    style={{
+                      textShadow: "0 0 10px rgba(var(--neon-4-rgb),0.4)",
+                    }}
+                  >
+                    {formatCurrency(Math.max(0, budgetRemaining))}
+                  </PrivacyValue>
+                )}
+                <span className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                  {t("dashboard.leftToday" as any)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="relative overflow-hidden rounded-2xl p-4"
-        style={{
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(25px)",
-          border: "1px solid rgba(var(--neon-3-rgb),0.15)",
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <FontAwesomeIcon
-            icon={faClock}
-            className="text-xs text-muted-foreground"
-          />
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold"
-            style={{
-              backgroundColor: "rgba(var(--neon-3-rgb),0.15)",
-              color: "var(--neon-3)",
-            }}
-          >
-            2 {t("time.units.day" as any)}
-          </span>
-        </div>
-        <div className="mt-4">
-          <p className="text-xs text-muted-foreground">{t("dashboard.nextSubscription" as any)}</p>
-          <PrivacyValue className="mt-1 font-mono text-xl font-bold text-foreground">
-            {formatCurrency(15.99)}
-          </PrivacyValue>
-        </div>
-      </motion.div>
-    </div>
-  )
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="relative overflow-hidden rounded-2xl p-4"
+          style={{
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(25px)",
+            border: "1px solid rgba(var(--neon-3-rgb),0.15)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <FontAwesomeIcon
+              icon={faClock}
+              className="text-xs text-muted-foreground"
+            />
+            {nextSubscription && daysUntilNextBill !== null && (
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                style={{
+                  backgroundColor: "rgba(var(--neon-3-rgb),0.15)",
+                  color: "var(--neon-3)",
+                }}
+              >
+                {daysUntilNextBill} {t("time.units.day" as any)}
+              </span>
+            )}
+          </div>
+          <div className="mt-4">
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.nextSubscription" as any)}
+            </p>
+            {isLoadingSubscriptions ? (
+              <span className="mt-1 font-mono text-xl font-bold text-muted-foreground">---</span>
+            ) : nextSubscription ? (
+              <>
+                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                  {nextSubscription.name}
+                </p>
+                <PrivacyValue className="mt-1 font-mono text-xl font-bold text-foreground">
+                  {formatCurrency(nextSubscription.amount, nextSubscription.currency)}
+                </PrivacyValue>
+              </>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                —
+              </p>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
 
-  const renderSavingsWidget = () => (
-    <Link href="/savings">
+  const renderAIWidget = () => (
+    <Link href="/ai-coach">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -519,27 +584,23 @@ export default function DashboardPage() {
       >
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ backgroundColor: "rgba(255,127,0,0.15)" }}
+          style={{ backgroundColor: "rgba(var(--neon-1-rgb),0.15)" }}
         >
           <FontAwesomeIcon
-            icon={faFire}
+            icon={faRobot}
             className="text-sm"
             style={{
-              color: "#FF8C00",
-              filter: "drop-shadow(0 0 6px #FF8C00)",
+              color: "var(--neon-1)",
+              filter: "drop-shadow(0 0 6px rgba(var(--neon-1-rgb),0.6))",
             }}
           />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-foreground">
-            {t("goals.streak.depositToday" as any)}:
-            <span className="font-mono text-neon-cyan">
-              {" "}
-              {formatCurrency(50)}
-            </span>
+            {t("aiCoach.inviteTitle" as any)}
           </p>
           <p className="text-[10px] text-muted-foreground">
-            {t("goals.streak.dontBreak" as any, { value: 2, unit: t("time.units.day" as any) })}
+            {t("aiCoach.inviteSubtitle" as any)}
           </p>
         </div>
         <FontAwesomeIcon
@@ -552,31 +613,45 @@ export default function DashboardPage() {
 
   return (
     <>
+      <LanguageModal
+        open={showLanguageModal}
+        onConfirm={() => ctx?.setLanguageModalConfirmed(true)}
+        onSkip={skipOnboarding}
+      />
       {/* Mobile layout */}
       <div className="flex flex-col gap-4 px-4 pt-6 pb-4 lg:hidden">
         {renderHeader()}
         {renderPeriodSelector()}
         {renderBalanceCard()}
         {renderInfoRowMobile()}
-        {renderSavingsWidget()}
+        {renderAIWidget()}
+        <div className="space-y-4">
+          <h2 className="font-serif text-sm font-bold tracking-wider text-foreground">
+            {t("goals.savings" as any)}
+          </h2>
+          <SavingsContainer />
+        </div>
         {renderRecentTable()}
       </div>
 
       {/* Desktop layout - grid for better use of space */}
-      <div className="hidden h-full lg:block">
-        <div className="flex h-full flex-col gap-6">
+      <div className="hidden h-full lg:block pt-2">
+        <div className="flex h-full flex-col gap-6 mt-2">
           {renderHeader()}
           <div className="flex flex-wrap gap-2">{renderPeriodSelector()}</div>
           <div className="grid gap-6 xl:grid-cols-3">
             <div className="xl:col-span-2 space-y-6">
               {renderBalanceCard("lg:p-6")}
-              {renderRecentTable()}
             </div>
-            <div className="space-y-6">
-              {renderInfoRowMobile()}
-              {renderSavingsWidget()}
-            </div>
+            <div className="space-y-6">{renderInfoRowMobile()} {renderAIWidget()}</div>
           </div>
+          <div className="space-y-4">
+            <h2 className="font-serif text-sm font-bold tracking-wider text-foreground">
+              {t("goals.savings" as any)}
+            </h2>
+            <SavingsContainer />
+          </div>
+          <div className="space-y-6">{renderRecentTable()}</div>
         </div>
       </div>
     </>

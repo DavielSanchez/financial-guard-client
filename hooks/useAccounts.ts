@@ -1,7 +1,12 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { accountsService, type CreateAccount } from "@/services/accounts.service"
+import {
+  accountsService,
+  type CreateAccount,
+  type UpdateAccount,
+  type BridgePayload,
+} from "@/services/accounts.service"
 import type { Account } from "@/types/accounts.types"
 
 export function useAccounts() {
@@ -24,6 +29,21 @@ export function useAccounts() {
     },
   })
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateAccount }) =>
+      accountsService.update(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+    },
+  })
+
+  const bridgeMutation = useMutation({
+    mutationFn: (payload: BridgePayload) => accountsService.bridge(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+    },
+  })
+
   return {
     accounts: data ?? [],
     isLoading,
@@ -31,6 +51,11 @@ export function useAccounts() {
     error,
     createAccount: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
+    updateAccount: (id: string, payload: UpdateAccount) =>
+      updateMutation.mutateAsync({ id, payload }),
+    isUpdating: updateMutation.isPending,
+    bridgeTransfer: bridgeMutation.mutateAsync,
+    isBridging: bridgeMutation.isPending,
   }
 }
 

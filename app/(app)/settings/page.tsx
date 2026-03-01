@@ -14,9 +14,11 @@ import {
   faCoins,
   faRightFromBracket,
   faCheck,
+  faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons"
 import { useSettings, themeList, type ThemeName, type ModeName, type LanguageCode, type CurrencyCode } from "@/components/settings-provider"
 import { useAuth } from "@/hooks/use-auth"
+import { setForceStartTour } from "@/hooks/useOnboarding"
 // import { useSettings } from "@/components/settings-provider"
 
 const currencies: { code: CurrencyCode; label: string; symbol: string }[] = [
@@ -34,6 +36,11 @@ const languages: { code: LanguageCode; label: string }[] = [
 export default function SettingsPage() {
   const router = useRouter()
   const { logout } = useAuth()
+
+  const handleRepeatProtocol = () => {
+    setForceStartTour()
+    router.push("/dashboard")
+  }
   const {
     theme,
     mode,
@@ -326,6 +333,30 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Onboarding Section */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <FontAwesomeIcon icon={faShieldHalved} className="text-xs" style={{ color: "#00D4FF" }} />
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t("onboarding.settings.sectionTitle" as any)}
+          </h2>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={handleRepeatProtocol}
+          className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-xs font-bold uppercase tracking-wider"
+          style={{
+            backgroundColor: "rgba(0, 212, 255, 0.08)",
+            border: "1px solid rgba(0, 212, 255, 0.3)",
+            color: "#00D4FF",
+            boxShadow: "0 0 12px rgba(0, 212, 255, 0.15)",
+          }}
+        >
+          <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
+          {t("onboarding.settings.repeatProtocol" as any)}
+        </motion.button>
       </section>
 
       {/* Account Section */}

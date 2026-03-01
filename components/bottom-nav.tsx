@@ -83,6 +83,12 @@ export function BottomNav() {
         <Link
           href="/transactions"
           className="relative -mt-7 flex items-center justify-center"
+          data-tour="fab-new-transaction"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("onboarding-fab-clicked"))
+            }
+          }}
         >
           <motion.div
             whileTap={{ scale: 0.9 }}

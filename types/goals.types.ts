@@ -19,6 +19,7 @@ export interface Goal {
   id: string
   user_id?: string
   name: string
+  description?: string | null
   target_amount: number
   /** API returns saved_already as the current saved amount */
   saved_already?: number
@@ -36,6 +37,28 @@ export interface Goal {
   icon?: string
   currency?: string
   deadline?: string
+  status?: string
+  notify_inactivity_days?: number
+  notify_on_risk?: boolean
   created_at?: string
   updated_at?: string
+}
+
+export interface GoalAnalyticsArithmeticDay {
+  date: string
+  amount: number
+}
+
+export interface GoalAnalytics {
+  currentStreak: number
+  nextPaymentAmount: number
+  daysRemaining: number
+  percentage: number
+  statusHealth: string
+  statusMessage: string
+  projection: number
+  streakFreezeAvailable: boolean
+  arithmeticProgression: GoalAnalyticsArithmeticDay[]
+  isTodayPaid: boolean
+  currency: string
 }
