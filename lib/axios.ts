@@ -20,10 +20,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const path = typeof window !== "undefined" ? window.location.pathname : ""
-      if (!path.includes("/login") && !path.includes("/register")) {
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+      
+      if (!path.includes("/login") && !path.includes("/register") && !path.includes("/")) {
         onUnauthorized?.()
-      }
+      }}
     }
     return Promise.reject(error)
   }
