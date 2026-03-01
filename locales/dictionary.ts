@@ -259,7 +259,7 @@ export const en = {
       date: "Date",
       amount: "Amount",
     },
-    nextSubscription: "Netflix Premium",
+    nextSubscription: "Next Payment",
     status: {
       onTrack: "ON TRACK",
       warning: "OVER BUDGET",
@@ -909,7 +909,7 @@ export const es = {
       date: "Fecha",
       amount: "Monto",
     },
-    nextSubscription: "Netflix Premium",
+    nextSubscription: "Proximo pago",
     status: {
       onTrack: "EN ORDEN",
       warning: "SOBRE PRESUPUESTO",

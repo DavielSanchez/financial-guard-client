@@ -336,7 +336,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Onboarding Section */}
-      <section>
+      {/* <section>
         <div className="mb-3 flex items-center gap-2">
           <FontAwesomeIcon icon={faShieldHalved} className="text-xs" style={{ color: "#00D4FF" }} />
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -357,7 +357,7 @@ export default function SettingsPage() {
           <FontAwesomeIcon icon={faShieldHalved} className="text-[10px]" />
           {t("onboarding.settings.repeatProtocol" as any)}
         </motion.button>
-      </section>
+      </section> */}
 
       {/* Account Section */}
       <section>
