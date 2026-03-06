@@ -44,8 +44,14 @@ export function useAccounts() {
     },
   })
 
+  const accounts = data ?? []
+  const walletAccounts = accounts.filter((a) => !a.is_hidden)
+  const vaultAccounts = accounts.filter((a) => a.is_hidden)
+
   return {
-    accounts: data ?? [],
+    accounts,
+    walletAccounts,
+    vaultAccounts,
     isLoading,
     isError,
     error,

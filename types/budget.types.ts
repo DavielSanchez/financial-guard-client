@@ -35,6 +35,11 @@ export interface CreateEnvelopePayload {
   icon?: string
 }
 
+export interface UpsertTemplatePayload {
+  category_id: string
+  budget_amount: number
+}
+
 export interface Subscription {
   id: string
   user_id: string

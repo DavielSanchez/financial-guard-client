@@ -36,3 +36,24 @@ export interface RecentTransaction {
   categories: RecentTransactionCategory
   accounts: RecentTransactionAccount
 }
+
+export interface TransactionsPagination {
+  total: number
+  page: number
+  totalPages: number
+  hasMore: boolean
+}
+
+export interface PaginatedTransactionsResponse {
+  transactions: RecentTransaction[]
+  pagination: TransactionsPagination
+}
+
+export interface TransactionsHistoryParams {
+  page?: number
+  limit?: number
+  type?: "income" | "expense"
+  accountId?: string
+  startDate?: string
+  endDate?: string
+}

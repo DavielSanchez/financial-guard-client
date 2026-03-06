@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transaction.service';
 import { useDashboard } from './useDashboard';
 import { CreateTransaction } from '@/types/transactions.types';
@@ -6,6 +7,7 @@ import { CreateTransaction } from '@/types/transactions.types';
 export function useTransactions() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { refresh: refreshDashboard } = useDashboard('Day'); // Traemos el refresh del dashboard
 
   const addTransaction = async (data: CreateTransaction) => {
@@ -13,11 +15,8 @@ export function useTransactions() {
     setError(null);
     try {
       const result = await transactionService.create(data);
-      
-      // ¡IMPORTANTE! Refrescamos el dashboard para que el balance 
-      // y las gráficas se actualicen al instante
       await refreshDashboard();
-      
+      queryClient.invalidateQueries({ queryKey: ['budget', 'envelopes'] });
       return result;
     } catch (err: any) {
       const message = err.response?.data?.error || "Error al registrar la transacción";
@@ -33,6 +32,7 @@ export function useTransactions() {
     try {
       await transactionService.delete(id);
       await refreshDashboard();
+      queryClient.invalidateQueries({ queryKey: ['budget', 'envelopes'] });
     } catch (err: any) {
       setError(err.response?.data?.error || "Error al eliminar");
     } finally {

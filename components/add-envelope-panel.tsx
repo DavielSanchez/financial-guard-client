@@ -16,9 +16,19 @@ interface AddEnvelopePanelProps {
   onOpenChange: (open: boolean) => void
   onSave: (payload: CreateEnvelopePayload) => void | Promise<void>
   isPending?: boolean
+  /** When provided, new envelope is created for this period instead of current date */
+  periodMonth?: number
+  periodYear?: number
 }
 
-export function AddEnvelopePanel({ open, onOpenChange, onSave, isPending }: AddEnvelopePanelProps) {
+export function AddEnvelopePanel({
+  open,
+  onOpenChange,
+  onSave,
+  isPending,
+  periodMonth,
+  periodYear,
+}: AddEnvelopePanelProps) {
   const { currency } = useSettings()
   const { categories } = useCategories()
   const [categoryId, setCategoryId] = useState("")
@@ -34,13 +44,15 @@ export function AddEnvelopePanel({ open, onOpenChange, onSave, isPending }: AddE
   const handleSave = async () => {
     if (!categoryId || !budgetAmount || budgetAmount <= 0) return
     const now = new Date()
+    const month = periodMonth ?? now.getMonth() + 1
+    const year = periodYear ?? now.getFullYear()
     const payload: CreateEnvelopePayload = {
       category_id: categoryId,
       budget_amount: budgetAmount,
       currency,
       period_type: "monthly",
-      period_month: now.getMonth() + 1,
-      period_year: now.getFullYear(),
+      period_month: month,
+      period_year: year,
       color: selected?.color,
       icon: selected?.icon,
     }

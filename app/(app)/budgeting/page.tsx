@@ -1,18 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useI18n } from "@/hooks/use-translations"
 import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
+import { format, addMonths, subMonths } from "date-fns"
 import { es, enUS } from "date-fns/locale"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faRotate, faXmark, faPlus } from "@fortawesome/free-solid-svg-icons"
+import { faRotate, faXmark, faPlus, faChevronLeft, faChevronRight, faPen } from "@fortawesome/free-solid-svg-icons"
 import { CategoryIcon } from "@/components/category-icon"
 import { PrivacyValue } from "@/components/privacy-value"
 import { GlassCard } from "@/components/glass-card"
 import { AddEnvelopePanel } from "@/components/add-envelope-panel"
 import { AddDrainerPanel } from "@/components/add-drainer-panel"
 import { Skeleton } from "@/components/ui/skeleton"
+import { CurrencyInput } from "@/components/currency-input"
 import { useBudget } from "@/hooks/useBudget"
 import { useSettings } from "@/components/settings-provider"
 import type { BudgetEnvelope, Subscription } from "@/types/budget.types"
@@ -22,11 +23,13 @@ function EnvelopeCard({
   formatCurrency,
   t,
   isSpanish,
+  onEdit,
 }: {
   envelope: BudgetEnvelope
   formatCurrency: (n: number) => string
   t: (k: string, p?: Record<string, string | number>) => string
   isSpanish: boolean
+  onEdit: (env: BudgetEnvelope) => void
 }) {
   const budgetAmount = envelope.budget_amount
   const spent = envelope.spent ?? 0
@@ -40,9 +43,13 @@ function EnvelopeCard({
   return (
     <motion.div
       layout
+      role="button"
+      tabIndex={0}
+      onClick={() => onEdit(envelope)}
+      onKeyDown={(e) => e.key === "Enter" && onEdit(envelope)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative flex min-h-[160px] flex-col overflow-hidden rounded-2xl lg:min-h-[200px]"
+      className="relative flex min-h-[160px] cursor-pointer flex-col overflow-hidden rounded-2xl lg:min-h-[200px]"
       style={{
         backgroundColor: "rgba(255,255,255,0.04)",
         backdropFilter: "blur(25px)",
@@ -70,26 +77,38 @@ function EnvelopeCard({
           >
             <CategoryIcon name={icon} color={color} size={20} strokeWidth={2.5} />
           </div>
-          {isAtRisk && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-full px-2 py-0.5 text-[9px] font-bold text-red-400"
-              style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
+          <div className="flex items-center gap-1">
+            <span
+              className="rounded-full p-1.5 text-[10px] text-white/50 transition-colors hover:bg-white/10 hover:text-white/80"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(envelope)
+              }}
+              aria-label={t("budgeting.editEnvelope" as any)}
             >
-              At Risk
-            </motion.span>
-          )}
-          {isOver && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-full px-2 py-0.5 text-[9px] font-bold text-red-400"
-              style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
-            >
-              Over
-            </motion.span>
-          )}
+              <FontAwesomeIcon icon={faPen} className="text-xs" />
+            </span>
+              {isAtRisk && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-full px-2 py-0.5 text-[9px] font-bold text-red-400"
+                style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
+              >
+                At Risk
+              </motion.span>
+            )}
+            {isOver && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-full px-2 py-0.5 text-[9px] font-bold text-red-400"
+                style={{ backgroundColor: "rgba(239,68,68,0.2)" }}
+              >
+                Over
+              </motion.span>
+            )}
+          </div>
         </div>
         <h3 className="mt-2 font-serif text-sm font-bold tracking-wider text-white lg:text-base">
           {name}
@@ -132,10 +151,17 @@ function formatNextBill(dateStr: string, locale: "es" | "en"): string {
   }
 }
 
+const thisMonth = new Date()
+const initialPeriod = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1)
+
 export default function BudgetingPage() {
   const { t } = useI18n()
   const { formatCurrency, language } = useSettings()
   const isSpanish = language === "es"
+
+  const [selectedPeriod, setSelectedPeriod] = useState(initialPeriod)
+  const selectedMonth = selectedPeriod.getMonth() + 1
+  const selectedYear = selectedPeriod.getFullYear()
 
   const {
     envelopes,
@@ -149,13 +175,25 @@ export default function BudgetingPage() {
     isCreating,
     isCreatingSubscription,
     isToggling,
+    isUpdatingEnvelope,
+    isUpsertingTemplate,
     createEnvelope,
+    updateEnvelope,
+    upsertTemplate,
     createSubscription,
     toggleSubscription,
-  } = useBudget()
+  } = useBudget({ month: selectedMonth, year: selectedYear })
+
+  const monthYearLabel = useMemo(
+    () => format(selectedPeriod, "MMMM yyyy", { locale: isSpanish ? es : enUS }),
+    [selectedPeriod, isSpanish]
+  )
 
   const [activeTab, setActiveTab] = useState<"envelopes" | "drainers">("envelopes")
   const [addPanelOpen, setAddPanelOpen] = useState(false)
+  const [editingEnvelope, setEditingEnvelope] = useState<BudgetEnvelope | null>(null)
+  const [editAmount, setEditAmount] = useState(0)
+  const [editApplyToAllMonths, setEditApplyToAllMonths] = useState(false)
 
   const circumference = 2 * Math.PI * 70
   const strokeOffset = circumference * (1 - Math.min(totalPercentage / 100, 1))
@@ -261,6 +299,37 @@ export default function BudgetingPage() {
         </motion.button>
       </div>
 
+      {/* Month/Year selector - envelopes tab only */}
+      {activeTab === "envelopes" && (
+        <div
+          className="flex w-full items-center justify-between gap-4 rounded-2xl px-4 py-3"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            onClick={() => setSelectedPeriod((p) => subMonths(p, 1))}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+          >
+            <FontAwesomeIcon icon={faChevronLeft} className="text-sm" />
+          </motion.button>
+          <span className="min-w-[140px] text-center font-serif text-sm font-bold capitalize tracking-wider text-foreground">
+            {monthYearLabel}
+          </span>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            onClick={() => setSelectedPeriod((p) => addMonths(p, 1))}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+          >
+            <FontAwesomeIcon icon={faChevronRight} className="text-sm" />
+          </motion.button>
+        </div>
+      )}
+
       {/* Tab Toggle */}
       <div
         className="flex w-full rounded-full p-1"
@@ -312,7 +381,7 @@ export default function BudgetingPage() {
 
       {/* Add Panel */}
       <div className="w-full">
-        <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
           {activeTab === "envelopes" ? (
             <AddEnvelopePanel
               key="add-envelope"
@@ -322,6 +391,8 @@ export default function BudgetingPage() {
                 await createEnvelope(p)
               }}
               isPending={isCreating}
+              periodMonth={selectedMonth}
+              periodYear={selectedYear}
             />
           ) : (
             <AddDrainerPanel
@@ -372,10 +443,111 @@ export default function BudgetingPage() {
                 formatCurrency={formatCurrency}
                 t={t as (k: string, p?: Record<string, string | number>) => string}
                 isSpanish={isSpanish}
+                onEdit={(e) => {
+                  setEditingEnvelope(e)
+                  setEditAmount(e.budget_amount)
+                  setEditApplyToAllMonths(false)
+                }}
               />
             ))
           )}
         </div>
+
+        {/* Edit envelope panel */}
+        <AnimatePresence>
+          {editingEnvelope && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="mt-4 flex flex-col gap-4 rounded-2xl p-5"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(143,0,255,0.2)",
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-sm font-bold tracking-wider text-foreground">
+                    {t("budgeting.editEnvelope" as any)}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditingEnvelope(null)}
+                    className="rounded-full p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                  >
+                    <FontAwesomeIcon icon={faXmark} />
+                  </button>
+                </div>
+                <p className="truncate text-xs text-muted-foreground">
+                  {editingEnvelope.category?.name ?? "—"}
+                </p>
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {t("budgeting.monthlyLimit" as any)}
+                  </label>
+                  <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                    <CurrencyInput
+                      value={editAmount}
+                      onChange={setEditAmount}
+                      prefix="$"
+                      placeholder="0.00"
+                      inputClassName="text-sm"
+                    />
+                  </div>
+                </div>
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={editApplyToAllMonths}
+                    onChange={(e) => setEditApplyToAllMonths(e.target.checked)}
+                    className="h-4 w-4 rounded border-white/20 bg-white/5 accent-primary"
+                  />
+                  <span className="text-xs text-foreground">
+                    {t("budgeting.applyToAllMonths" as any)}
+                  </span>
+                </label>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  disabled={
+                    editAmount <= 0 ||
+                    isUpdatingEnvelope ||
+                    isUpsertingTemplate
+                  }
+                  onClick={async () => {
+                    if (!editingEnvelope || editAmount <= 0) return
+                    try {
+                      if (editApplyToAllMonths) {
+                        await upsertTemplate({
+                          category_id: editingEnvelope.category_id,
+                          budget_amount: editAmount,
+                        })
+                      }
+                      await updateEnvelope({
+                        id: editingEnvelope.id,
+                        updates: { budget_amount: editAmount },
+                      })
+                      setEditingEnvelope(null)
+                    } catch {
+                      // Error handled by hook/parent
+                    }
+                  }}
+                  className="rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
+                  style={{
+                    background: "linear-gradient(135deg, #8F00FF, #00D4FF)",
+                  }}
+                >
+                  {isUpdatingEnvelope || isUpsertingTemplate
+                    ? "..."
+                    : t("common.save" as any)}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Right Panel - Drainers (visible only when tab=drainers) */}

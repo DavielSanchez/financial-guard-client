@@ -1,12 +1,14 @@
 export interface DashboardResponse {
-  balance: number;
-  income: number;
-  expense: number;
-  delta: number;
-  deltaLabel: string;
-  chartBalance: ChartPoint[];
-  chartIncome: ChartPoint[];
-  chartExpense: ChartPoint[];
+  balance: number
+  income: number
+  expense: number
+  delta: number
+  deltaLabel: string
+  /** Total of hidden (vault) accounts; excluded from balance by default */
+  vaults_balance?: number
+  chartBalance: ChartPoint[]
+  chartIncome: ChartPoint[]
+  chartExpense: ChartPoint[]
 }
 
 export interface ChartPoint {

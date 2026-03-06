@@ -345,6 +345,10 @@ export const en = {
     createDrainer: "Add drainer",
     noSubscriptions: "No subscriptions registered",
     addFirstBudget: "Add your first budget",
+    applyToAllMonths: "Apply to all months (Fixed)",
+    editEnvelope: "Edit budget",
+    monthlyLimit: "Monthly limit",
+    thisMonthOnly: "This month only",
   },
 
   // ===================== GOALS & SAVINGS =====================
@@ -372,6 +376,8 @@ export const en = {
     complete: "Complete",
     deposit: "Deposit",
     todayDone: "Today done",
+    todayGoalComplete: "Today's goal complete! ✅",
+    comeBackTomorrow: "Come back tomorrow",
     deleteThisGoal: "Delete this goal?",
     securityLvlPrefix: "Security Lvl: ",
     securityLevel: {
@@ -471,7 +477,12 @@ export const en = {
       noAccounts: "No accounts detected",
       initializeFirst: "Tap to initialize your first vault",
       initializeProtocol: "Initialize Protocol",
+      contentHidden: "Content hidden",
+      revealContent: "Reveal content",
+      hideContent: "Hide content",
     },
+    hideAccountLabel: "Hide account",
+    hideAccountWarning: "This account will be moved to your Vaults and will not affect your Wallet balance.",
 
     bridge: {
       title: "Bridge Mode",
@@ -548,6 +559,12 @@ export const en = {
     logIncomeExpense: "Log Income / Expense",
     logIncome: "Log Income",
     logExpense: "Log Expense",
+    history: "History",
+    filterByType: "Type",
+    filterByAccount: "Account",
+    filterAll: "All",
+    loadMore: "Load more",
+    noTransactions: "No transactions to show",
   },
 
   // ===================== ONBOARDING =====================
@@ -766,7 +783,7 @@ export const es = {
     wallet: "Billetera",
     budgeting: "Presupuesto",
     savings: "Ahorros",
-    aiCoach: "Entrenador IA",
+    aiCoach: "Coach IA",
     settings: "Ajustes",
   },
 
@@ -954,6 +971,10 @@ export const es = {
     createDrainer: "Agregar drenador",
     noSubscriptions: "Sin suscripciones registradas",
     addFirstBudget: "Añade tu primer presupuesto",
+    applyToAllMonths: "Aplicar a todos los meses (Fijo)",
+    editEnvelope: "Editar presupuesto",
+    monthlyLimit: "Límite mensual",
+    thisMonthOnly: "Solo este mes",
   },
 
   // ===================== FINANCE & BANKING =====================
@@ -1022,6 +1043,8 @@ export const es = {
     complete: "Completar",
     deposit: "Depositar",
     todayDone: "Hoy hecho",
+    todayGoalComplete: "¡Meta de hoy cumplida! ✅",
+    comeBackTomorrow: "Vuelve mañana",
     deleteThisGoal: "¿Eliminar esta meta?",
     securityLvlPrefix: "Nivel Seg: ",
     securityLevel: {
@@ -1121,7 +1144,12 @@ export const es = {
       noAccounts: "Sin cuentas detectadas",
       initializeFirst: "Toca para inicializar tu primera bóveda",
       initializeProtocol: "Inicializar Protocolo",
+      contentHidden: "Contenido oculto",
+      revealContent: "Mostrar contenido",
+      hideContent: "Ocultar contenido",
     },
+    hideAccountLabel: "Ocultar cuenta",
+    hideAccountWarning: "Esta cuenta se moverá a tus Bóvedas y no afectará el balance de tu Billetera.",
 
     bridge: {
       title: "Modo Puente",
@@ -1198,6 +1226,12 @@ export const es = {
     logIncomeExpense: "Registrar Ingreso / Gasto",
     logIncome: "Registrar Ingreso",
     logExpense: "Registrar Gasto",
+    history: "Historial",
+    filterByType: "Tipo",
+    filterByAccount: "Cuenta",
+    filterAll: "Todas",
+    loadMore: "Cargar más",
+    noTransactions: "No hay transacciones para mostrar",
   },
 
   // ===================== ADD CATEGORY =====================

@@ -5,6 +5,7 @@ import type {
   CreateSubscriptionPayload,
   Subscription,
   SubscriptionsResponse,
+  UpsertTemplatePayload,
 } from "@/types/budget.types"
 
 const now = new Date()
@@ -36,6 +37,11 @@ export const budgetService = {
     await api.delete(`/budget/envelopes/${id}`)
   },
 
+  async upsertTemplate(payload: UpsertTemplatePayload): Promise<unknown> {
+    const { data } = await api.post("/budget/templates", payload)
+    return data
+  },
+
   async getSubscriptions(): Promise<{ subscriptions: Subscription[]; total_monthly_drain: number }> {
     const { data } = await api.get<SubscriptionsResponse | Subscription[]>("/budget/subscriptions")
     if (Array.isArray(data)) {
@@ -63,5 +69,15 @@ export const budgetService = {
   async toggleSubscription(id: string, is_active: boolean): Promise<Subscription> {
     const { data } = await api.patch<Subscription>(`/budget/subscriptions/${id}`, { is_active })
     return data
+  },
+
+  async getNearestSubscription(): Promise<Subscription | null> {
+    try {
+      const { data } = await api.get<Subscription>("/budget/subscriptions/nearest")
+      return data
+    } catch (e: any) {
+      if (e.response?.status === 404) return null
+      throw e
+    }
   },
 }

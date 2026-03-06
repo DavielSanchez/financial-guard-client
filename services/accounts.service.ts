@@ -22,8 +22,10 @@ export interface BridgePayload {
 }
 
 export const accountsService = {
-  async getAll(): Promise<Account[]> {
-    const { data } = await api.get<Account[]>("/accounts")
+  async getAll(params?: { is_hidden?: boolean }): Promise<Account[]> {
+    const { data } = await api.get<Account[]>("/accounts", {
+      params: params?.is_hidden !== undefined ? { is_hidden: params.is_hidden } : undefined,
+    })
     return data
   },
 

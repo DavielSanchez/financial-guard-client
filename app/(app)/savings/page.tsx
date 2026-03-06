@@ -169,9 +169,11 @@ function PiggyBank({
   const fillPercentage = effectiveTarget > 0 ? Math.min((goal.saved / effectiveTarget) * 100, 100) : 0
   const isComplete = fillPercentage >= 100
 
-  const today = new Date().toISOString().split("T")[0]
+  const todayUtc = new Date().toISOString().split("T")[0]
+  const alreadyContributedToday =
+    goal.type === "progression" && goal.lastCheckIn === todayUtc
   const canCheckInToday =
-    goal.type === "progression" && goal.lastCheckIn !== today && !isComplete
+    goal.type === "progression" && !alreadyContributedToday && !isComplete
   const todayAmount =
     goal.type === "progression"
       ? getTodayDeposit(goal.startAmount || 1, goal.increment || 1, goal.currentDay || 0)
@@ -435,29 +437,36 @@ function PiggyBank({
               )}
             </div>
 
-            {/* Check-in Button */}
-            {canCheckInToday ? (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCheckInClick}
-                disabled={isContributing}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-white"
-                style={{
-                  background: "linear-gradient(135deg, #8F00FF, #00D4FF)",
-                  boxShadow: "0 0 12px rgba(143,0,255,0.3)",
-                }}
-              >
-                <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
-                <span>
-                  {t("goals.checkIn" as any, { amount: formatCurrency(todayAmount, goal.currency) })}
-                </span>
-              </motion.button>
-            ) : (
-              !isComplete && (
-                <span className="flex items-center gap-1.5 text-[10px] text-neon-green">
-                  <FontAwesomeIcon icon={faCheck} className="text-[8px]" />
-                  {t("goals.todayDone")}
-                </span>
+            {/* Check-in Button: enabled only when no contribution today; when blocked show disabled + message */}
+            {goal.type === "progression" && !isComplete && (
+              canCheckInToday ? (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCheckInClick}
+                  disabled={isContributing}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-white"
+                  style={{
+                    background: "linear-gradient(135deg, #8F00FF, #00D4FF)",
+                    boxShadow: "0 0 12px rgba(143,0,255,0.3)",
+                  }}
+                >
+                  <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+                  <span>
+                    {t("goals.checkIn" as any, { amount: formatCurrency(todayAmount, goal.currency) })}
+                  </span>
+                </motion.button>
+              ) : (
+                <motion.button
+                  disabled
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-muted-foreground"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+                  <span>{t("goals.todayGoalComplete" as any)}</span>
+                </motion.button>
               )
             )}
           </div>

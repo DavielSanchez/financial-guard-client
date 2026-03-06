@@ -279,27 +279,38 @@ export function AddAccountPanel({
               </div>
             </div>
 
-            {/* Tasa interés + Ocultar */}
-            <div className="flex items-end gap-4">
-              <div className="flex-1">
-                <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">Tasa interés %</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(e.target.value)}
-                  placeholder="0"
-                  className={`${inputWrap} ${inputStyle}`}
-                />
-              </div>
-              <label className="flex cursor-pointer items-center gap-2 pb-3">
+            {/* Tasa interés */}
+            <div>
+              <label className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground">Tasa interés %</label>
+              <input
+                type="number"
+                step="0.1"
+                value={interestRate}
+                onChange={(e) => setInterestRate(e.target.value)}
+                placeholder="0"
+                className={`${inputWrap} ${inputStyle}`}
+              />
+            </div>
+
+            {/* Ocultar cuenta → Bóveda */}
+            <div
+              className="rounded-xl border border-white/10 bg-white/5 p-4"
+            >
+              <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
                   checked={isHidden}
                   onChange={(e) => setIsHidden(e.target.checked)}
-                  className="h-4 w-4 rounded border-white/20"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 accent-primary"
                 />
-                <span className="text-xs text-muted-foreground">Ocultar</span>
+                <div>
+                  <span className="text-xs font-medium text-foreground">
+                    {t("wallet.hideAccountLabel" as any)}
+                  </span>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {t("wallet.hideAccountWarning" as any)}
+                  </p>
+                </div>
               </label>
             </div>
 

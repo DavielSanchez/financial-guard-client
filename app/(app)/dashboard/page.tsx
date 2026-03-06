@@ -77,32 +77,25 @@ export default function DashboardPage() {
   const {
     envelopes,
     subscriptions,
+    nearestSubscription,
     totalBudget,
     totalSpent,
     isLoadingEnvelopes,
     isLoadingSubscriptions,
+    isLoadingNearestSubscription,
   } = useBudget()
 
   const budgetRemaining = totalBudget - totalSpent
   const budgetUsedPct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
-  const nextSubscription = useMemo(() => {
-    const active = subscriptions.filter((s) => s.is_active)
-    if (active.length === 0) return null
-    return active.sort(
-      (a, b) =>
-        new Date(a.next_bill_date).getTime() - new Date(b.next_bill_date).getTime()
-    )[0]
-  }, [subscriptions])
-
   const daysUntilNextBill = useMemo(() => {
-    if (!nextSubscription) return null
+    if (!nearestSubscription) return null
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const next = new Date(nextSubscription.next_bill_date + "T12:00:00")
+    const next = new Date(nearestSubscription.next_bill_date + "T12:00:00")
     next.setHours(0, 0, 0, 0)
     return Math.ceil((next.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
-  }, [nextSubscription])
+  }, [nearestSubscription])
 
   const displayValue = useMemo(() => {
     if (!summary) return 0
@@ -327,6 +320,15 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {summary?.vaults_balance != null && summary.vaults_balance > 0 && (
+        <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+          {t("wallet.vault.title" as any)}:{" "}
+          <PrivacyValue className="font-mono font-semibold text-foreground">
+            {formatCurrency(summary.vaults_balance)}
+          </PrivacyValue>
+        </p>
+      )}
+
       <div className="mt-4">
         <DashboardChart
           data={currentChart.data}
@@ -344,14 +346,15 @@ export default function DashboardPage() {
         <h2 className="font-serif text-base font-bold italic tracking-wider text-foreground">
           {t("dashboard.recentActivity" as any)}
         </h2>
-        <button
+        <Link
+          href="/transactions/history"
           className="text-xs font-bold text-neon-cyan"
           style={{
             textShadow: "0 0 8px rgba(var(--neon-2-rgb),0.4)",
           }}
         >
           {t("common.all" as any)}
-        </button>
+        </Link>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
@@ -530,7 +533,7 @@ export default function DashboardPage() {
               icon={faClock}
               className="text-xs text-muted-foreground"
             />
-            {nextSubscription && daysUntilNextBill !== null && (
+            {nearestSubscription && daysUntilNextBill !== null && (
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{
@@ -546,15 +549,15 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               {t("dashboard.nextSubscription" as any)}
             </p>
-            {isLoadingSubscriptions ? (
+            {isLoadingNearestSubscription ? (
               <span className="mt-1 font-mono text-xl font-bold text-muted-foreground">---</span>
-            ) : nextSubscription ? (
+            ) : nearestSubscription ? (
               <>
                 <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                  {nextSubscription.name}
+                  {nearestSubscription.name}
                 </p>
                 <PrivacyValue className="mt-1 font-mono text-xl font-bold text-foreground">
-                  {formatCurrency(nextSubscription.amount, nextSubscription.currency)}
+                  {formatCurrency(nearestSubscription.amount, nearestSubscription.currency)}
                 </PrivacyValue>
               </>
             ) : (

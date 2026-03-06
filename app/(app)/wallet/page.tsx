@@ -61,7 +61,8 @@ export default function WalletPage() {
   const { t } = useI18n()
   const { formatCurrency } = useSettings()
   const {
-    accounts: rawAccounts,
+    walletAccounts: walletAccountsRaw,
+    vaultAccounts: vaultAccountsRaw,
     isLoading: loadingAccounts,
     createAccount,
     updateAccount,
@@ -75,20 +76,12 @@ export default function WalletPage() {
   const [addPanelOpen, setAddPanelOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
-  const cards = useMemo(() => rawAccounts.filter((a) => !a.is_hidden).map(accountToCard), [rawAccounts])
-  const totalBalance = useMemo(() => cards.reduce((s, c) => s + c.balance, 0), [cards])
-  const vaultAccounts = useMemo(
-    () =>
-      goals
-        .filter((g) => g.piggy_type === "open" || g.target_amount > 0)
-        .map((g) => ({
-          id: g.id,
-          name: g.name,
-          balance: g.saved_already ?? g.saved_amount ?? 0,
-          hidden: true,
-        })),
-    [goals]
+  const cards = useMemo(() => walletAccountsRaw.map(accountToCard), [walletAccountsRaw])
+  const totalBalance = useMemo(
+    () => cards.reduce((s: number, c: Account & { balance: number }) => s + c.balance, 0),
+    [cards]
   )
+  const vaultCards = useMemo(() => vaultAccountsRaw.map(accountToCard), [vaultAccountsRaw])
 
   const [currentCard, setCurrentCard] = useState(0)
   const [direction, setDirection] = useState(0)
@@ -348,7 +341,7 @@ export default function WalletPage() {
                                       whileTap={{ scale: 0.9 }}
                                       onClick={(e) => {
                                         e.stopPropagation()
-                                        const acc = rawAccounts.find((a) => a.id === cards[currentCard].id)
+                                        const acc = walletAccountsRaw.find((a: Account) => a.id === cards[currentCard].id)
                                         if (acc) openEditAccount(acc)
                                       }}
                                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 transition-colors hover:bg-white/20"
@@ -415,7 +408,7 @@ export default function WalletPage() {
                         onChange={(e) => setBridgeFrom(Number(e.target.value))}
                         className="mt-2 w-full bg-transparent text-sm font-bold text-foreground outline-none"
                       >
-                        {cards.map((c, i) => (
+                        {cards.map((c: Account & { name: string; id: string }, i: number) => (
                           <option key={c.id} value={i} className="bg-background text-foreground">
                             {c.name}
                           </option>
@@ -432,7 +425,7 @@ export default function WalletPage() {
                         onChange={(e) => setBridgeTo(Number(e.target.value))}
                         className="mt-2 w-full bg-transparent text-sm font-bold text-foreground outline-none"
                       >
-                        {cards.map((c, i) => (
+                        {cards.map((c: Account & { name: string; id: string }, i: number) => (
                           <option key={c.id} value={i} className="bg-background text-foreground">
                             {c.name}
                           </option>
@@ -510,8 +503,8 @@ export default function WalletPage() {
           </div>
         </section>
 
-        {/* Vault */}
-        {vaultAccounts.length > 0 && (
+        {/* Vaults: hidden accounts — content hidden by default, reveal with eye */}
+        {vaultCards.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <FontAwesomeIcon icon={faLock} className="text-[10px] text-primary" />
@@ -520,29 +513,52 @@ export default function WalletPage() {
               </h2>
             </div>
             <div className="flex flex-col gap-2">
-              {vaultAccounts.map((acc) => {
+              {vaultCards.map((acc: Account & { name: string; type: string; balance: number; id: string }) => {
                 const isRevealed = vaultRevealed.includes(acc.id)
                 return (
                   <GlassCard key={acc.id} className="flex items-center justify-between p-4" glowColor="pink">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-foreground">{acc.name}</p>
-                      <PrivacyValue
-                        className={`font-mono text-lg font-bold ${!isRevealed ? "privacy-blur" : ""}`}
-                      >
-                        {formatCurrency(acc.balance)}
-                      </PrivacyValue>
+                      <p className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {acc.type.replace("_", " ")}
+                      </p>
+                      {isRevealed ? (
+                        <PrivacyValue className="mt-1 font-mono text-lg font-bold text-foreground">
+                          {formatCurrency(acc.balance)}
+                        </PrivacyValue>
+                      ) : (
+                        <p className="mt-1 font-mono text-lg font-bold tracking-widest text-muted-foreground">
+                          ****
+                        </p>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setVaultRevealed((prev) =>
-                          isRevealed ? prev.filter((id) => id !== acc.id) : [...prev, acc.id]
-                        )
-                      }
-                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
-                    >
-                      <FontAwesomeIcon icon={isRevealed ? faEyeSlash : faEye} />
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const account = vaultAccountsRaw.find((a: Account) => a.id === acc.id)
+                          if (account) openEditAccount(account)
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-foreground"
+                      >
+                        <FontAwesomeIcon icon={faPen} className="text-sm" />
+                      </motion.button>
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() =>
+                          setVaultRevealed((prev) =>
+                            isRevealed ? prev.filter((id) => id !== acc.id) : [...prev, acc.id]
+                          )
+                        }
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                        aria-label={isRevealed ? t("wallet.vault.hideContent" as any) : t("wallet.vault.revealContent" as any)}
+                      >
+                        <FontAwesomeIcon icon={isRevealed ? faEyeSlash : faEye} />
+                      </motion.button>
+                    </div>
                   </GlassCard>
                 )
               })}
